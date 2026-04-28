@@ -2485,6 +2485,290 @@ function TabRebalance({ byCat, totalVal }) {
     </div>
   );
 }
+function TabAIChat({ filtered=[], quotes={}, totalVal, portRet, portVol, portSharpe, portMaxDD, byCat=[], famSel }) {
+  const preco = a => quotes[a.ticker]?.price ?? a.avgPrice;
+  const [msgs, setMsgs] = useState([
+    {role:"assistant", content:"Olá! Sou seu Family Officer digital. Posso analisar seu portfólio, explicar métricas, sugerir estratégias e responder qualquer dúvida sobre gestão patrimonial. Como posso ajudar?"}
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const chatRef = useState(null);
+
+  const portfolioContext = `
+Portfólio: ${famSel==="Todas"?"Consolidado":famSel}
+Patrimônio Total: R$ ${totalVal?.toLocaleString("pt-BR",{maximumFractionDigits:0})}
+Retorno Anualizado: ${portRet}%
+Volatilidade: ${portVol}%
+Sharpe Ratio: ${portSharpe}
+Max Drawdown: ${portMaxDD}%
+Número de Ativos: ${filtered.length}
+Alocação: ${byCat.slice(0,5).map(c=>c.label+": "+c.pct?.toFixed(1)+"%").join(", ")}
+Top 3 Ativos: ${filtered.slice(0,3).map(a=>a.ticker+" ("+a.name+")").join(", ")}
+  `.trim();
+
+  async function enviar() {
+    if(!input.trim()||loading) return;
+    const pergunta = input.trim();
+    setInput("");
+    setMsgs(prev=>[...prev,{role:"user",content:pergunta}]);
+    setLoading(true);
+    try {
+      const resp = await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          model:"claude-sonnet-4-20250514",
+          max_tokens:1000,
+          system:`Você é um Family Officer digital especialista em gestão patrimonial brasileira de alto patrimônio. 
+Responda sempre em português brasileiro, de forma clara, didática e objetiva.
+Contexto atual do portfólio do cliente:
+${portfolioContext}
+
+Regras:
+- Seja direto e objetivo
+- Use dados reais do portfólio quando relevante
+- Explique termos técnicos de forma simples
+- Sugira ações concretas quando cabível
+- Nunca forneça recomendações de investimento específicas sem os devidos disclaimers`,
+          messages:[...msgs.filter(m=>m.role!=="assistant"||msgs.indexOf(m)>0).map(m=>({role:m.role,content:m.content})),
+            {role:"user",content:pergunta}]
+        })
+      });
+      const data = await resp.json();
+      const resposta = data.content?.[0]?.text || "Desculpe, não consegui processar. Tente novamente.";
+      setMsgs(prev=>[...prev,{role:"assistant",content:resposta}]);
+    } catch(e) {
+      setMsgs(prev=>[...prev,{role:"assistant",content:"Erro de conexão. Verifique sua internet e tente novamente."}]);
+    }
+    setLoading(false);
+  }
+
+  const SUGESTOES = [
+    "Como está meu portfólio hoje?",
+    "Qual é meu maior risco?",
+    "Como reduzir minha carga tributária?",
+    "Explique o Sharpe Ratio do meu portfólio",
+    "Como está minha alocação vs recomendado?",
+    "Quais ativos têm maior concentração?",
+  ];
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:16,height:"calc(100vh - 180px)",minHeight:500}}>
+      <SecaoTitulo titulo="Family Officer AI" sub="Powered by Claude · Análise em tempo real do seu portfólio"/>
+
+      {/* Chat messages */}
+      <div style={{...S.card,flex:1,overflow:"auto",display:"flex",flexDirection:"column",gap:12,padding:16}}>
+        {msgs.map((msg,i)=>(
+          <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",flexDirection:msg.role==="user"?"row-reverse":"row"}}>
+            <div style={{width:32,height:32,borderRadius:"50%",background:msg.role==="user"?C.blue:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>
+              {msg.role==="user"?"👤":"🤖"}
+            </div>
+            <div style={{
+              maxWidth:"75%",padding:"10px 14px",borderRadius:msg.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",
+              background:msg.role==="user"?C.blue+"22":C.surface,
+              border:"1px solid "+(msg.role==="user"?C.blue+"44":C.border),
+              fontSize:13,color:C.text,lineHeight:1.7,whiteSpace:"pre-wrap"
+            }}>
+              {msg.content}
+            </div>
+          </div>
+        ))}
+        {loading && (
+          <div style={{display:"flex",gap:10,alignItems:"center"}}>
+            <div style={{width:32,height:32,borderRadius:"50%",background:C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}>🤖</div>
+            <div style={{padding:"10px 14px",background:C.surface,borderRadius:"16px 16px 16px 4px",border:"1px solid "+C.border}}>
+              <div style={{display:"flex",gap:4}}>
+                {[0,1,2].map(i=>(
+                  <div key={i} style={{width:6,height:6,borderRadius:"50%",background:C.accent,animation:"fo-pulse 1s ease-in-out "+(i*0.2)+"s infinite"}}/>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Sugestões rápidas */}
+      {msgs.length < 3 && (
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {SUGESTOES.map(s=>(
+            <button key={s} onClick={()=>{setInput(s);}} style={{...S.btnO,fontSize:11,padding:"6px 12px"}}>
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Input */}
+      <div style={{display:"flex",gap:10}}>
+        <input
+          style={{...S.inp,flex:1,padding:"12px 16px",fontSize:13}}
+          placeholder="Pergunte qualquer coisa sobre seu portfólio..."
+          value={input}
+          onChange={e=>setInput(e.target.value)}
+          onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&enviar()}
+        />
+        <button onClick={enviar} disabled={loading||!input.trim()}
+          style={{...S.btnV,padding:"12px 20px",opacity:loading||!input.trim()?0.5:1,cursor:loading||!input.trim()?"not-allowed":"pointer"}}>
+          {loading?"...":"Enviar"}
+        </button>
+      </div>
+      <div style={{fontSize:10,color:C.muted,textAlign:"center"}}>
+        Powered by Claude (Anthropic) · As respostas são informativas e não constituem recomendação de investimento
+      </div>
+    </div>
+  );
+}
+
+function TabPerpetuid({ totalVal, portRet, portVol, portMaxDD, filtered=[], quotes={}, byCat=[] }) {
+  const preco = a => quotes[a.ticker]?.price ?? a.avgPrice;
+  const despesasAnuais = totalVal * 0.03; // 3% do patrimônio como despesa estimada
+  const horizonte = 30;
+  const taxaImposto = 0.20;
+  const itcmdPct = 0.04;
+
+  // 1. Wealth Longevity Ratio
+  const patrimonioProjetado30a = totalVal * Math.pow(1 + (portRet/100 - 0.05), horizonte);
+  const wlr = despesasAnuais > 0 ? patrimonioProjetado30a / (despesasAnuais * 25) : 0;
+  const sigWLR = wlr >= 3 ? {cor:C.accent,emoji:"🟢",label:"Excelente",badge:"3 gerações"} :
+                 wlr >= 1.5 ? {cor:C.gold,emoji:"🟡",label:"Adequado",badge:"ok"} :
+                 {cor:C.red,emoji:"🔴",label:"Atenção",badge:"risco"};
+
+  // 2. Effective Tax Drag
+  const retornoBruto = totalVal * (portRet/100);
+  const irEstimado = retornoBruto * 0.15;
+  const comeCotasEst = totalVal * 0.006;
+  const itcmdEst = totalVal * itcmdPct * 0.1;
+  const totalImpostos = irEstimado + comeCotasEst + itcmdEst;
+  const taxDrag = retornoBruto > 0 ? (totalImpostos / retornoBruto) * 100 : 0;
+  const sigTaxDrag = taxDrag < 20 ? {cor:C.accent,emoji:"🟢",label:"Eficiente",badge:"<20%"} :
+                     taxDrag < 30 ? {cor:C.gold,emoji:"🟡",label:"Moderado",badge:"ok"} :
+                     {cor:C.red,emoji:"🔴",label:"Alto",badge:"revisar"};
+
+  // 3. Succession Readiness Score
+  const checklistItems = [
+    {label:"Testamento atualizado", peso:20, ok:false},
+    {label:"Holding familiar constituída", peso:25, ok:false},
+    {label:"Herdeiros educados financeiramente", peso:20, ok:false},
+    {label:"Liquidez para ITCMD disponível", peso:20, ok:totalVal*0.08 < totalVal*0.15},
+    {label:"Seguro de vida adequado", peso:15, ok:false},
+  ];
+  const [srsChecks, setSrsChecks] = useState(checklistItems.map(i=>i.ok));
+  const srsScore = checklistItems.reduce((s,item,i)=>s+(srsChecks[i]?item.peso:0),0);
+  const sigSRS = srsScore >= 80 ? {cor:C.accent,emoji:"🟢",label:"Pronto",badge:"excelente"} :
+                 srsScore >= 50 ? {cor:C.gold,emoji:"🟡",label:"Parcial",badge:"em progresso"} :
+                 {cor:C.red,emoji:"🔴",label:"Crítico",badge:"ação urgente"};
+
+  // 4. Liquidity Coverage Ratio
+  const ativosLiquidos30d = filtered.filter(a=>
+    ["acoes_br","acoes_eua","etfs","cripto"].includes(a.category)
+  ).reduce((s,a)=>s+preco(a)*a.qty,0);
+  const compromissos12m = despesasAnuais + totalVal*0.01;
+  const lcr = compromissos12m > 0 ? (ativosLiquidos30d / compromissos12m) * 100 : 0;
+  const sigLCR = lcr >= 150 ? {cor:C.accent,emoji:"🟢",label:"Adequado",badge:"≥150%"} :
+                 lcr >= 100 ? {cor:C.gold,emoji:"🟡",label:"Limitado",badge:"ok"} :
+                 {cor:C.red,emoji:"🔴",label:"Insuficiente",badge:"risco"};
+
+  // 5. Intergenerational Transfer Efficiency
+  const custoTransferencia = totalVal * (itcmdPct + 0.02 + 0.01); // ITCMD + inventário + outros
+  const patrimonioLiquidoHerdeiros = totalVal - custoTransferencia;
+  const transferEfficiency = totalVal > 0 ? (patrimonioLiquidoHerdeiros / totalVal) * 100 : 0;
+  const sigTE = transferEfficiency >= 85 ? {cor:C.accent,emoji:"🟢",label:"Eficiente",badge:"≥85%"} :
+                transferEfficiency >= 70 ? {cor:C.gold,emoji:"🟡",label:"Moderado",badge:"ok"} :
+                {cor:C.red,emoji:"🔴",label:"Baixo",badge:"otimizar"};
+
+  // Projeção patrimonial
+  const anos = [5,10,15,20,25,30];
+  const projecao = anos.map(a=>({
+    ano: String(new Date().getFullYear()+a),
+    conservador: totalVal*Math.pow(1+(portRet/100-portVol/100*0.5-0.03),a),
+    base:         totalVal*Math.pow(1+(portRet/100-0.03),a),
+    otimista:     totalVal*Math.pow(1+(portRet/100+portVol/100*0.3-0.03),a),
+  }));
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:16}}>
+      <SecaoTitulo titulo="Perpetuidade & Sucessão" sub="5 métricas proprietárias de longevidade familiar"/>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12}}>
+        {[
+          {label:"Wealth Longevity Ratio",val:fmt(wlr,2)+"x",sub:"Meta: > 3,0x (3 gerações)",sig:sigWLR,
+           desc:"Patrimônio projetado em 30 anos dividido por (despesas × 25). Acima de 3x significa que o patrimônio dura pelo menos 3 gerações."},
+          {label:"Effective Tax Drag",val:fmt(taxDrag,1)+"%",sub:"Meta: < 20% do retorno bruto",sig:sigTaxDrag,
+           desc:"Total de impostos estimados (IR + come-cotas + ITCMD projetado) como % do retorno bruto anual."},
+          {label:"Succession Readiness",val:srsScore+"/100",sub:"Checklist ponderado",sig:sigSRS,
+           desc:"Score baseado em 5 pilares: testamento, holding, educação, liquidez para ITCMD e seguro de vida."},
+          {label:"Liquidity Coverage Ratio",val:fmt(lcr,0)+"%",sub:"Meta: > 150%",sig:sigLCR,
+           desc:"Ativos liquidáveis em 30 dias dividido por compromissos dos próximos 12 meses. Garante capacidade de pagamento."},
+          {label:"Transfer Efficiency",val:fmt(transferEfficiency,1)+"%",sub:"% que chega aos herdeiros",sig:sigTE,
+           desc:"Percentual do patrimônio que chega líquido para a próxima geração após ITCMD, inventário e custos de transferência."},
+        ].map(m=>(
+          <div key={m.label} style={{...S.card,border:"1px solid "+m.sig.cor+"33",background:"linear-gradient(135deg,"+m.sig.cor+"08,"+C.card+")"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+              <div style={{fontSize:10,color:C.muted,fontWeight:600,letterSpacing:1,textTransform:"uppercase",flex:1}}>{m.label}</div>
+              <span style={{...S.badge(m.sig.cor),fontSize:9}}>{m.sig.label}</span>
+            </div>
+            <div style={{fontSize:28,fontWeight:800,color:m.sig.cor,fontFamily:"'Syne',sans-serif",marginBottom:4}}>{m.val}</div>
+            <div style={{fontSize:10,color:C.muted,marginBottom:8}}>{m.sub}</div>
+            <div style={{fontSize:11,color:C.textSub,lineHeight:1.6}}>{m.desc}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Succession Readiness Checklist */}
+      <div style={S.card}>
+        <SecaoTitulo titulo="Checklist de Prontidão Sucessória" sub="Marque os itens concluídos"/>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {checklistItems.map((item,i)=>(
+            <div key={i} onClick={()=>setSrsChecks(prev=>{const n=[...prev];n[i]=!n[i];return n;})}
+              style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:srsChecks[i]?C.accent+"12":C.surface,borderRadius:10,cursor:"pointer",border:"1px solid "+(srsChecks[i]?C.accent+"44":C.border),transition:"all .2s"}}>
+              <div style={{width:20,height:20,borderRadius:4,background:srsChecks[i]?C.accent:C.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,flexShrink:0}}>
+                {srsChecks[i]?"✓":""}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:600,color:srsChecks[i]?C.accent:C.text}}>{item.label}</div>
+              </div>
+              <div style={{fontSize:11,color:C.muted}}>peso {item.peso}pts</div>
+            </div>
+          ))}
+        </div>
+        <div style={{marginTop:12,display:"flex",alignItems:"center",gap:10}}>
+          <div style={{flex:1,background:C.border,borderRadius:4,height:8,overflow:"hidden"}}>
+            <div style={{width:srsScore+"%",height:"100%",background:sigSRS.cor,borderRadius:4,transition:"width .5s"}}/>
+          </div>
+          <div style={{fontSize:14,fontWeight:800,color:sigSRS.cor}}>{srsScore}/100</div>
+        </div>
+      </div>
+
+      {/* Projeção patrimonial */}
+      <div style={S.card}>
+        <SecaoTitulo titulo="Projeção Patrimonial" sub="Cenários conservador, base e otimista · descontando despesas"/>
+        <ResponsiveContainer width="100%" height={220}>
+          <AreaChart data={projecao}>
+            <XAxis dataKey="ano" stroke={C.muted} tick={{fontSize:10}}/>
+            <YAxis stroke={C.muted} tick={{fontSize:9}} tickFormatter={v=>"R$"+(v/1e6).toFixed(0)+"M"}/>
+            <RechartsTip contentStyle={S.TT} formatter={v=>[fmtBRL(v),"Patrimônio"]}/>
+            <Area type="monotone" dataKey="otimista" stroke={C.accent} fill={C.accent+"22"} strokeWidth={1} strokeDasharray="4 3" name="Otimista"/>
+            <Area type="monotone" dataKey="base" stroke={C.blue} fill={C.blue+"33"} strokeWidth={2} name="Base"/>
+            <Area type="monotone" dataKey="conservador" stroke={C.gold} fill={C.gold+"22"} strokeWidth={1} strokeDasharray="4 3" name="Conservador"/>
+            <Legend/>
+          </AreaChart>
+        </ResponsiveContainer>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginTop:12}}>
+          {[
+            {label:"Cenário Base (30a)",val:fmtBRL(projecao[5].base),cor:C.blue},
+            {label:"ITCMD Estimado",val:fmtBRL(totalVal*itcmdPct),cor:C.red},
+            {label:"Herdeiros Recebem",val:fmtBRL(patrimonioLiquidoHerdeiros),cor:C.accent},
+          ].map(k=>(
+            <div key={k.label} style={{...S.card,padding:"12px 14px",textAlign:"center"}}>
+              <div style={{fontSize:9,color:C.muted,textTransform:"uppercase",letterSpacing:.5}}>{k.label}</div>
+              <div style={{fontSize:16,fontWeight:800,color:k.cor,fontFamily:"'Syne',sans-serif",marginTop:4}}>{k.val}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TabSucessao({ assets, quotes={}, totalVal }) {
   const preco = a => quotes[a.ticker]?.price ?? a.avgPrice;
   const [simP, setSimP] = useState(0);
@@ -3515,7 +3799,14 @@ td{padding:8px 10px;border-bottom:1px solid #1E2D4522}
 <tbody>${ativos.map(a=>{const v=preco(a)*a.qty,r=(preco(a)-a.avgPrice)*a.qty,rp=a.avgPrice?r/(a.avgPrice*a.qty)*100:0;
 return `<tr><td><b>${a.ticker}</b></td><td>${catOf(a.category).label}</td><td>${fmt(a.qty,0)}</td><td>${fmtBRL(a.avgPrice)}</td><td>${fmtBRL(preco(a))}</td><td>${fmtBRL(v)}</td><td>${fmt(total?v/total*100:0,2)}%</td><td class="${r>=0?"pos":"neg"}">${fmtBRL(r)}</td><td class="${rp>=0?"pos":"neg"}">${fmtPct(rp)}</td></tr>`;}).join("")}
 </tbody></table>
-<div class="footer"><span>Family Office App · Brapi + Finnhub</span><span>${hoje()}</span></div>
+<div class="footer">
+<span>Family Office · Gestão Patrimonial Institucional · Brapi + Finnhub</span>
+<span>Gerado em: ${hoje()} · Confidencial</span>
+</div>
+<div style="margin-top:14px;padding:10px;background:#0D1520;border-radius:6px;font-size:9px;color:#4B5563;text-align:center">
+Este relatório é de uso exclusivo da família indicada. Os dados são baseados em cotações de mercado e podem não refletir valores exatos de liquidação.
+Não constitui recomendação de investimento. Family Office · Gestão Patrimonial.
+</div>
 </body></html>`;
     const b = new Blob([html],{type:"text/html"});
     const u = URL.createObjectURL(b);
@@ -12064,6 +12355,8 @@ export default function App() {
     {id:"alertas",    icon:"🔔", label:"Alertas"+(activeAlerts>0?" ("+activeAlerts+")":"")},
     {id:"relatorio",  icon:"📄", label:"Relatório"},
     {id:"onepager",   icon:"📝", label:"One Pager"},
+    {id:"perpetuid",  icon:"♾️",  label:"Perpetuidade"},
+    {id:"aichat",     icon:"🤖", label:"AI Officer"},
   ];
 
   const TITLES = {
@@ -12094,7 +12387,7 @@ export default function App() {
     {label:"⏪ Portfolio Visualizer", ids:["backtest","tactical","rollingopt","metas","correlacoes","gestores"]},
     {label:"🧠 Sentimento",       ids:["sentimento"]},
     {label:"📖 Ajuda",          ids:["ajuda"]},
-    {label:"Operacional",    ids:["transacoes","watchlist","alertas","relatorio","onepager"]},
+    {label:"Operacional",    ids:["transacoes","watchlist","alertas","relatorio","onepager","perpetuid","aichat"]},
   ];
   return (
     <div style={{ display:"flex", minHeight:"100vh", background:C.bg, color:C.text,
@@ -12393,6 +12686,8 @@ export default function App() {
      {tab==="watchlist"   && <TabWatchlist   watch={watch} setWatch={setWatch} quotes={quotes}/>}
      {tab==="alertas"     && <TabAlertas     alerts={alerts} setAlerts={setAlerts} quotes={quotes}/>}
      {tab==="relatorio"   && <TabRelatorio   assets={assets} quotes={quotes} txs={txs} famSel={famSel}/>}
+     {tab==="perpetuid"  && <TabPerpetuid filtered={filtered} quotes={quotes} totalVal={totalVal} portRet={portRet} portVol={volPort} portSharpe={portSharpe} portMaxDD={portMaxDD} byCat={byCat} famSel={famSel}/>}
+     {tab==="aichat"     && <TabAIChat filtered={filtered} quotes={quotes} totalVal={totalVal} portRet={portRet} portVol={volPort} portSharpe={portSharpe} portMaxDD={portMaxDD} byCat={byCat} famSel={famSel}/>}
      {tab==="onepager"    && <TabOnePager    filtered={filtered} quotes={quotes} totalVal={totalVal} totalCost={totalCost} totalRet={totalRet} totalRp={totalRp} byCat={byCat} portSharpe={portSharpe} portVol={volPort} portMaxDD={portMaxDD} portRet={portRet} famSel={famSel}/>}
     </div>
 
