@@ -10618,6 +10618,55 @@ const ETF_DB = [
    style:{large:72,mid:22,small:6,value:55,blend:32,growth:13},
    dd2008:-59.2, dd2020:-46.8, dd2022:-8.2, esl:.01,
    divYield:4.82, divFreq:"semiannual", cumGrowth5y:8.4},
+  {ticker:"IWDA", nome:"iShares MSCI World",      indice:"MSCI World",        tipo:"Large Blend",   ter:.20, te:.03, td:-.12,aum:80e9,  vol:2e6,  spread:.05, nav:98.2,  px:98.5,   prem:+.31, n:1458,country:"Global", currency:"USD",
+   sectors:{tech:22.8,fin:15.8,health:12.2,cons:10.8,ind:10.2,energy:4.2,util:2.8,mat:3.8,re:2.2,tele:8.4,other:6.8},
+   factors:{value:.3,growth:.7,momentum:.5,quality:.7,lowvol:.5,size:-.2},
+   top10:[["AAPL",4.8],["MSFT",4.5],["NVDA",3.2],["AMZN",2.4],["META",1.8],["GOOGL",1.6],["BRK",1.2],["LLY",1.1],["TSLA",1.0],["AVGO",0.9]],
+   style:{large:78,mid:20,small:2,value:32,blend:40,growth:28},
+   dd2008:-53.2, dd2020:-33.8, dd2022:-18.2, esl:.01, divYield:1.85, divFreq:"annual", cumGrowth5y:92.4},
+
+  {ticker:"VXUS", nome:"Vanguard Total Intl",    indice:"FTSE Global ex-US",  tipo:"Foreign Blend", ter:.07, te:.04, td:-.06,aum:68e9,  vol:5e6,  spread:.02, nav:62.4,  px:62.5,   prem:+.16, n:8614,country:"Global", currency:"USD",
+   sectors:{fin:20.2,ind:13.8,tech:13.4,cons:11.8,health:9.8,mat:6.8,energy:5.2,util:3.8,re:2.8,tele:7.2,other:5.2},
+   factors:{value:.5,growth:.5,momentum:.3,quality:.5,lowvol:.5,size:.1},
+   top10:[["ASML",1.2],["SAP",0.9],["Nestle",0.8],["LVMH",0.8],["Toyota",0.7],["HSBC",0.7],["Roche",0.6],["Shell",0.6],["Samsung",0.6],["Novo",0.5]],
+   style:{large:60,mid:32,small:8,value:42,blend:38,growth:20},
+   dd2008:-45.8, dd2020:-30.2, dd2022:-16.8, esl:.01, divYield:3.12, divFreq:"semi-annual", cumGrowth5y:42.8},
+
+  {ticker:"VTI",  nome:"Vanguard Total Mkt",     indice:"CRSP US Total Mkt",  tipo:"Large Blend",   ter:.03, te:.01, td:-.02,aum:420e9, vol:25e6, spread:.01, nav:248.8, px:249.0,  prem:+.08, n:3728,country:"US", currency:"USD",
+   sectors:{tech:28.2,fin:12.8,health:12.2,cons:9.8,ind:9.8,energy:3.8,util:2.8,mat:2.4,re:3.2,tele:8.8,other:6.2},
+   factors:{value:.2,growth:.8,momentum:.6,quality:.7,lowvol:.4,size:.0},
+   top10:[["AAPL",6.8],["MSFT",6.2],["NVDA",4.8],["AMZN",3.4],["META",2.6],["GOOGL",2.2],["BRK",1.7],["LLY",1.5],["AVGO",1.3],["TSLA",1.2]],
+   style:{large:72,mid:20,small:8,value:30,blend:40,growth:30},
+   dd2008:-50.2, dd2020:-31.8, dd2022:-19.4, esl:.01, divYield:1.38, divFreq:"quarterly", cumGrowth5y:108.2},
+
+  {ticker:"EEM",  nome:"iShares MSCI Emerg Mkt", indice:"MSCI Emerg Mkt",    tipo:"Diversif. EM",  ter:.68, te:.08, td:-.42,aum:24e9,  vol:40e6, spread:.04, nav:42.8,  px:42.9,   prem:+.23, n:1246,country:"EM", currency:"USD",
+   sectors:{fin:22.4,tech:20.8,cons:12.8,mat:7.8,energy:6.8,ind:6.2,util:4.2,re:2.8,health:3.8,tele:8.8,other:3.6},
+   factors:{value:.5,growth:.5,momentum:.3,quality:.4,lowvol:.5,size:.2},
+   top10:[["Samsung",3.8],["TSMC",3.4],["Alibaba",2.2],["Tencent",2.0],["Reliance",1.2],["Infosys",0.9],["ICICI",0.8],["Meituan",0.7],["JD",0.6],["PDD",0.6]],
+   style:{large:65,mid:28,small:7,value:45,blend:35,growth:20},
+   dd2008:-60.4, dd2020:-30.8, dd2022:-22.4, esl:.03, divYield:2.82, divFreq:"semi-annual", cumGrowth5y:18.4},
+
+  {ticker:"AGG",  nome:"iShares Core US Bond",   indice:"US Aggregate Bond",  tipo:"Core Bond",     ter:.03, te:.02, td:-.01,aum:108e9, vol:8e6,  spread:.02, nav:96.8,  px:96.9,   prem:+.10, n:11168,country:"US", currency:"USD",
+   sectors:{gov:43.2,mbs:25.8,corp:23.8,abs:4.2,cmbs:2.2,other:.8},
+   factors:{value:.6,growth:.1,momentum:.2,quality:.8,lowvol:.9,size:.0},
+   top10:[["US Treasury",28.4],["FNMA",12.8],["GNMA",8.4],["FHLMC",6.8],["Apple",0.4],["Microsoft",0.3],["JPMorgan",0.3],["BofA",0.3],["Wells Fargo",0.2],["Verizon",0.2]],
+   style:{large:0,mid:0,small:0,value:0,blend:0,growth:0},
+   dd2008:-4.2, dd2020:-5.8, dd2022:-13.2, esl:0, divYield:3.82, divFreq:"monthly", cumGrowth5y:-8.4},
+
+  {ticker:"BOVA11",nome:"iShares Ibovespa",      indice:"Ibovespa",           tipo:"Large Blend BR", ter:.10, te:.05, td:-.08,aum:8e9,   vol:2e6,  spread:.08, nav:122.4, px:122.8,  prem:+.33, n:87,  country:"BR", currency:"BRL",
+   sectors:{fin:30.2,energy:18.4,mat:14.2,cons:12.8,util:8.8,ind:6.4,health:3.2,tele:4.2,re:1.8},
+   factors:{value:.7,growth:.4,momentum:.4,quality:.5,lowvol:.4,size:-.1},
+   top10:[["VALE3",12.4],["PETR4",9.8],["ITUB4",8.2],["BBDC4",5.8],["ABEV3",4.2],["WEGE3",3.8],["RENT3",2.8],["RDOR3",2.4],["BBAS3",2.2],["B3SA3",2.0]],
+   style:{large:72,mid:22,small:6,value:52,blend:30,growth:18},
+   dd2008:-58.8, dd2020:-46.4, dd2022:-6.2, esl:0, divYield:6.42, divFreq:"varies", cumGrowth5y:28.4},
+
+  {ticker:"IVVB11",nome:"iShares S&P500 BR",     indice:"S&P 500 (BDR)",      tipo:"Large Blend BR", ter:.23, te:.04, td:-.18,aum:12e9,  vol:1e6,  spread:.10, nav:312.4, px:313.2,  prem:+.26, n:503, country:"US-BR", currency:"BRL",
+   sectors:{tech:28.5,fin:13.2,health:12.8,cons:10.2,ind:8.8,energy:3.8,util:2.5,mat:2.8,re:2.4,tele:8.8,other:6.2},
+   factors:{value:.2,growth:.8,momentum:.6,quality:.7,lowvol:.4,size:-.3},
+   top10:[["AAPL",7.2],["MSFT",6.8],["NVDA",5.1],["AMZN",3.8],["META",2.9],["GOOGL",2.5],["GOOGL",2.1],["BRK",1.8],["LLY",1.6],["AVGO",1.4]],
+   style:{large:85,mid:13,small:2,value:30,blend:38,growth:32},
+   dd2008:-50.8, dd2020:-33.8, dd2022:-24.5, esl:.01, divYield:1.28, divFreq:"quarterly", cumGrowth5y:112.8},
+
 ];
 const ETF_OVERLAP = {
   "SPY-QQQ":   {pct:45.2, reason:"Mega-caps compartilhadas (AAPL, MSFT, NVDA, AMZN, META)"},
@@ -10629,6 +10678,466 @@ const ETF_OVERLAP = {
   "QQQ-VNQ":   {pct:2.1,  reason:"Pequena exposição a REITs de dados"},
   "BOVA11-SPY":{pct:2.8,  reason:"Petrobras ADR e Vale ADR no S&P"},
 };
+function TabETFFatores() {
+  const [sel, setSel] = useState("SPY");
+  const [horizon, setHorizon] = useState("10A");
+  const etf = ETF_DB.find(e=>e.ticker===sel)||ETF_DB[0];
+  const HORIZONTES = ["5A","10A","20A","30A"];
+  const anos = horizon==="5A"?5:horizon==="10A"?10:horizon==="20A"?20:30;
+
+  // Factor premium assumptions (annual, historical)
+  const PREMIOS = {value:4.2, growth:-1.2, momentum:7.8, quality:3.8, lowvol:2.4, size:2.8};
+  const factors = etf.factors||{};
+
+  // Expected return from factors
+  const factorReturn = Object.entries(factors).reduce((s,[f,w])=>s+w*(PREMIOS[f]||0),0);
+  const baseReturn = 8.0; // market return assumption
+  const expectedReturn = baseReturn + factorReturn;
+
+  // Drawdown simulation by factor profile
+  const defensiveness = (factors.lowvol||0)*0.4 + (factors.quality||0)*0.3 + Math.max(0,-(factors.size||0))*0.3;
+  const aggression = (factors.momentum||0)*0.4 + (factors.growth||0)*0.3 + Math.max(0,(factors.size||0))*0.3;
+
+  // Cost drag simulation
+  const INVESTIMENTO = 100000;
+  const retBruto = expectedReturn/100;
+  const retLiquido = retBruto - etf.ter/100;
+  const valorFinalBruto = INVESTIMENTO*Math.pow(1+retBruto,anos);
+  const valorFinalLiquido = INVESTIMENTO*Math.pow(1+retLiquido,anos);
+  const custoTotalDrag = valorFinalBruto - valorFinalLiquido;
+
+  // Performance attribution
+  const atrib = Object.entries(factors)
+    .map(([f,w])=>({fator:f,peso:w,premio:PREMIOS[f]||0,contrib:w*(PREMIOS[f]||0)}))
+    .sort((a,b)=>Math.abs(b.contrib)-Math.abs(a.contrib));
+
+  const FATOR_LABELS = {value:"Value",growth:"Growth",momentum:"Momentum",quality:"Quality",lowvol:"Low Vol",size:"Size"};
+  const FATOR_DESC = {
+    value:"Empresas baratas relativas aos fundamentos. Historicamente paga prêmio de ~4% ao ano no longo prazo.",
+    growth:"Empresas de alto crescimento. Prêmio negativo historicamente — paga-se pela expectativa de crescimento futuro.",
+    momentum:"Ativos que subiram continuam subindo no curto prazo. Melhor fator documentado, mas sujeito a crashes súbitos.",
+    quality:"Empresas rentáveis com balanços sólidos. Resiliente em crises. Sharpe alto historicamente.",
+    lowvol:"Ativos de baixa volatilidade. Paradoxo da anomalia — retorno ajustado ao risco superior ao esperado.",
+    size:"Exposição a small caps. Prêmio de tamanho documentado mas inconsistente nas últimas décadas.",
+  };
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:16}}>
+      <SecaoTitulo titulo="Análise de Fatores por Fundo" sub="Exposição a fatores de risco · Prêmios históricos · Retorno esperado"/>
+      <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
+        <select style={{...S.sel,width:200}} value={sel} onChange={e=>setSel(e.target.value)}>
+          {ETF_DB.map(e=><option key={e.ticker} value={e.ticker}>{e.ticker} — {e.nome}</option>)}
+        </select>
+        <div style={{display:"flex",gap:6}}>
+          {HORIZONTES.map(h=>(
+            <button key={h} onClick={()=>setHorizon(h)} style={horizon===h?S.btnV:{...S.btnO,fontSize:11,padding:"5px 12px"}}>{h}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:16}}>
+        {/* Factor bars */}
+        <div style={S.card}>
+          <SecaoTitulo titulo={"Fatores — "+etf.nome} sub="Score de exposição · Prêmio histórico anual"/>
+          {atrib.map(({fator,peso,premio,contrib})=>(
+            <div key={fator} style={{marginBottom:14}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                <div>
+                  <span style={{fontSize:13,fontWeight:700,color:C.text,textTransform:"capitalize"}}>{FATOR_LABELS[fator]}</span>
+                  <span style={{fontSize:10,color:C.muted,marginLeft:8}}>{FATOR_DESC[fator]?.slice(0,50)}...</span>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:12,fontWeight:700,color:contrib>0?C.accent:contrib<0?C.red:C.muted}}>{contrib>0?"+":""}{contrib.toFixed(2)}%/a</div>
+                  <div style={{fontSize:10,color:C.muted}}>peso: {peso>0?"+":""}{(peso*100).toFixed(0)}</div>
+                </div>
+              </div>
+              <div style={{position:"relative",height:8,background:C.border,borderRadius:4,overflow:"hidden"}}>
+                <div style={{
+                  position:"absolute",
+                  left:peso<0?"auto":"50%",right:peso>=0?"auto":"50%",
+                  width:Math.abs(peso)*50+"%",height:"100%",
+                  background:contrib>0?C.accent:C.red,borderRadius:4
+                }}/>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Expected return & cost drag */}
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          <div style={{...S.cardGlow(C.accent),padding:16,textAlign:"center"}}>
+            <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Retorno Esperado</div>
+            <div style={{fontSize:36,fontWeight:800,fontFamily:"'Syne',sans-serif",color:C.accent}}>{expectedReturn.toFixed(1)}%</div>
+            <div style={{fontSize:10,color:C.muted,marginTop:4}}>base {baseReturn}% + fatores {factorReturn.toFixed(1)}%</div>
+          </div>
+          <div style={S.card}>
+            <div style={{fontSize:11,color:C.muted,marginBottom:10}}>Simulação R$100k em {anos} anos</div>
+            {[
+              {label:"Valor bruto",val:fmtBRL(valorFinalBruto),cor:C.blue},
+              {label:"Valor líq. de TER",val:fmtBRL(valorFinalLiquido),cor:C.accent},
+              {label:"Custo TER total",val:fmtBRL(custoTotalDrag),cor:C.red},
+            ].map(k=>(
+              <div key={k.label} style={{padding:"7px 0",borderBottom:"1px solid "+C.border+"44"}}>
+                <div style={{fontSize:10,color:C.muted}}>{k.label}</div>
+                <div style={{fontSize:15,fontWeight:800,color:k.cor}}>{k.val}</div>
+              </div>
+            ))}
+          </div>
+          <div style={S.card}>
+            <div style={{fontSize:11,color:C.muted,marginBottom:8}}>Perfil de Risco</div>
+            {[
+              {label:"Defensividade",val:Math.round(defensiveness*100),cor:C.accent},
+              {label:"Agressividade",val:Math.round(aggression*100),cor:C.red},
+            ].map(k=>(
+              <div key={k.label} style={{marginBottom:8}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3}}>
+                  <span style={{color:C.textSub}}>{k.label}</span>
+                  <b style={{color:k.cor}}>{k.val}/100</b>
+                </div>
+                <div style={{background:C.border,borderRadius:4,height:6}}>
+                  <div style={{width:k.val+"%",height:"100%",background:k.cor,borderRadius:4,transition:"width .4s"}}/>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Historical drawdowns */}
+      <div style={S.card}>
+        <SecaoTitulo titulo="Histórico de Drawdowns" sub="Quedas máximas em crises — quanto o fundo resistiu"/>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+          {[
+            {label:"Crise 2008",val:etf.dd2008,desc:"Crise financeira global"},
+            {label:"COVID-19 (2020)",val:etf.dd2020,desc:"Crash de março 2020"},
+            {label:"Bear Mkt (2022)",val:etf.dd2022,desc:"Alta de juros global"},
+          ].map(k=>(
+            <div key={k.label} style={{...S.card,padding:"12px 14px",textAlign:"center",borderTop:"3px solid "+(Math.abs(k.val)>40?C.red:Math.abs(k.val)>25?C.gold:C.accent)}}>
+              <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:.5}}>{k.label}</div>
+              <div style={{fontSize:24,fontWeight:800,color:Math.abs(k.val)>40?C.red:Math.abs(k.val)>25?C.gold:C.accent,fontFamily:"'Syne',sans-serif"}}>{k.val}%</div>
+              <div style={{fontSize:10,color:C.muted}}>{k.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TabCustoLP() {
+  const [inv, setInv] = useState(100000);
+  const [ret, setRet] = useState(8.0);
+  const [anos, setAnos] = useState(20);
+  const [ter1, setTer1] = useState(0.03);
+  const [ter2, setTer2] = useState(0.50);
+  const [ter3, setTer3] = useState(1.50);
+
+  const projetar = (ter) => {
+    const r = (ret - ter) / 100;
+    return Array.from({length:anos}, (_,i) => ({
+      ano: String(new Date().getFullYear()+i+1),
+      val: Math.round(inv * Math.pow(1+r, i+1)),
+    }));
+  };
+
+  const serie1 = projetar(ter1);
+  const serie2 = projetar(ter2);
+  const serie3 = projetar(ter3);
+  const final1 = serie1[serie1.length-1]?.val||0;
+  const final2 = serie2[serie2.length-1]?.val||0;
+  const final3 = serie3[serie3.length-1]?.val||0;
+  const dragVs2 = final1 - final2;
+  const dragVs3 = final1 - final3;
+
+  const chartData = serie1.map((s,i)=>({
+    ano:s.ano, ter_baixo:s.val, ter_medio:serie2[i]?.val, ter_alto:serie3[i]?.val
+  }));
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:16}}>
+      <SecaoTitulo titulo="Simulador de Custo de Longo Prazo" sub="O impacto real do TER em décadas de investimento"/>
+
+      {/* Inputs */}
+      <div style={S.card}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:14}}>
+          {[
+            {label:"Investimento Inicial",val:inv,set:setInv,prefix:"R$",step:10000,min:1000},
+            {label:"Retorno Bruto (%/a)",val:ret,set:setRet,suffix:"%",step:.5,min:1,max:30},
+            {label:"Horizonte (anos)",val:anos,set:setAnos,suffix:" anos",step:1,min:1,max:40},
+            {label:"TER Baixo (%/a)",val:ter1,set:setTer1,suffix:"%",step:.01,min:0,max:5},
+            {label:"TER Médio (%/a)",val:ter2,set:setTer2,suffix:"%",step:.05,min:0,max:5},
+            {label:"TER Alto (%/a)",val:ter3,set:setTer3,suffix:"%",step:.1,min:0,max:5},
+          ].map(f=>(
+            <div key={f.label}>
+              <div style={{fontSize:10,color:C.muted,marginBottom:4,textTransform:"uppercase",letterSpacing:.5}}>{f.label}</div>
+              <div style={{display:"flex",alignItems:"center",gap:6}}>
+                {f.prefix&&<span style={{fontSize:12,color:C.muted}}>{f.prefix}</span>}
+                <input type="number" step={f.step} min={f.min} max={f.max}
+                  style={{...S.inp,flex:1,fontSize:14,fontWeight:700}}
+                  value={f.val} onChange={e=>f.set(parseFloat(e.target.value)||0)}/>
+                {f.suffix&&<span style={{fontSize:12,color:C.muted}}>{f.suffix}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Result cards */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
+        {[
+          {label:"TER "+ter1+"%",val:fmtBRL(final1),cor:C.accent,drag:"—",dragCor:C.muted},
+          {label:"TER "+ter2+"%",val:fmtBRL(final2),cor:C.gold,drag:"Perde "+fmtBRL(dragVs2),dragCor:C.red},
+          {label:"TER "+ter3+"%",val:fmtBRL(final3),cor:C.red,drag:"Perde "+fmtBRL(dragVs3),dragCor:C.red},
+        ].map(k=>(
+          <div key={k.label} style={{...S.card,textAlign:"center",borderTop:"3px solid "+k.cor}}>
+            <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",marginBottom:6}}>{k.label} em {anos} anos</div>
+            <div style={{fontSize:22,fontWeight:800,color:k.cor,fontFamily:"'Syne',sans-serif"}}>{k.val}</div>
+            <div style={{fontSize:11,color:k.dragCor,marginTop:4}}>{k.drag}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Chart */}
+      <div style={S.card}>
+        <ResponsiveContainer width="100%" height={260}>
+          <AreaChart data={chartData}>
+            <XAxis dataKey="ano" stroke={C.muted} tick={{fontSize:9}} interval={Math.floor(anos/6)}/>
+            <YAxis stroke={C.muted} tick={{fontSize:9}} tickFormatter={v=>"R$"+(v/1e6).toFixed(1)+"M"}/>
+            <RechartsTip contentStyle={S.TT} formatter={v=>[fmtBRL(v),"Patrimônio"]}/>
+            <Area type="monotone" dataKey="ter_baixo" stroke={C.accent} fill={C.accent+"22"} strokeWidth={2} name={"TER "+ter1+"%"}/>
+            <Area type="monotone" dataKey="ter_medio" stroke={C.gold} fill={C.gold+"22"} strokeWidth={2} name={"TER "+ter2+"%"}/>
+            <Area type="monotone" dataKey="ter_alto" stroke={C.red} fill={C.red+"11"} strokeWidth={2} name={"TER "+ter3+"%"}/>
+            <Legend/>
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div style={{...S.card,background:C.accentSoft,border:"1px solid "+C.accent+"44"}}>
+        <div style={{fontSize:13,color:C.accent,fontWeight:700,marginBottom:6}}>💡 Regra do custo composto</div>
+        <div style={{fontSize:12,color:C.textSub,lineHeight:1.8}}>
+          Um TER de {ter3}% vs {ter1}% parece pequeno anualmente, mas em {anos} anos você perde {fmtBRL(dragVs3)} de patrimônio.
+          Isso equivale a {((dragVs3/final1)*100).toFixed(1)}% do seu patrimônio final sendo consumido por taxas.
+          ETFs de baixo custo (TER &lt; 0.10%) são um dos poucos alpha gratuitos no mercado.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TabETFOverlap() {
+  const [selA, setSelA] = useState("SPY");
+  const [selB, setSelB] = useState("QQQ");
+  const tickers = ETF_DB.map(e=>e.ticker);
+  const A = ETF_DB.find(e=>e.ticker===selA)||ETF_DB[0];
+  const B = ETF_DB.find(e=>e.ticker===selB)||ETF_DB[1];
+
+  // Calculate overlap from top10 holdings
+  const holdingsA = new Map((A.top10||[]).map(([t,w])=>[t,w]));
+  const holdingsB = new Map((B.top10||[]).map(([t,w])=>[t,w]));
+  const allTickers = [...new Set([...holdingsA.keys(),...holdingsB.keys()])];
+  const overlapPct = allTickers.reduce((s,t)=>s+Math.min(holdingsA.get(t)||0,holdingsB.get(t)||0),0);
+  const overlapSignal = overlapPct > 50 ? {cor:C.red,label:"Alto",desc:"Alta redundância — pouco benefício de diversificação"} :
+                        overlapPct > 25 ? {cor:C.gold,label:"Moderado",desc:"Alguma redundância — avalie se vale o custo duplo"} :
+                        {cor:C.accent,label:"Baixo",desc:"Boa diversificação — ativos complementares"};
+
+  // Sector overlap
+  const sectorsA = A.sectors||{};
+  const sectorsB = B.sectors||{};
+  const allSectors = [...new Set([...Object.keys(sectorsA),...Object.keys(sectorsB)])];
+  const sectorOverlap = allSectors.reduce((s,sec)=>s+Math.min(sectorsA[sec]||0,sectorsB[sec]||0),0);
+
+  // Holdings table
+  const holdingsTable = allTickers.map(t=>({
+    ticker:t, wA:holdingsA.get(t)||0, wB:holdingsB.get(t)||0,
+    overlap:Math.min(holdingsA.get(t)||0,holdingsB.get(t)||0)
+  })).sort((a,b)=>b.overlap-a.overlap||b.wA-a.wA);
+
+  // Cost simulation: investing R$100k in both vs one
+  const investTotal = 100000;
+  const costBoth = investTotal*(A.ter/100+B.ter/100)/2;
+  const costA = investTotal*(A.ter/100);
+  const savings = costBoth - Math.min(costA, investTotal*(B.ter/100));
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:16}}>
+      <SecaoTitulo titulo="Fund Overlap Analyzer" sub="Sobreposição de holdings entre ETFs e fundos"/>
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+        {[{sel:selA,set:setSelA,label:"Fundo A",etf:A},{sel:selB,set:setSelB,label:"Fundo B",etf:B}].map(({sel,set,label,etf})=>(
+          <div key={label} style={{...S.card,padding:"14px 16px"}}>
+            <div style={{fontSize:10,color:C.muted,marginBottom:6,textTransform:"uppercase"}}>{label}</div>
+            <select style={{...S.sel,width:"100%",marginBottom:8}} value={sel} onChange={e=>set(e.target.value)}>
+              {tickers.map(t=><option key={t} value={t}>{t} — {ETF_DB.find(e=>e.ticker===t)?.nome}</option>)}
+            </select>
+            <div style={{fontSize:11,color:C.textSub}}>{etf.indice} · {etf.n} holdings · TER {etf.ter}%</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Overlap Score */}
+      <div style={{...S.cardGlow(overlapSignal.cor),padding:20,textAlign:"center"}}>
+        <div style={{fontSize:11,color:C.muted,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Sobreposição de Holdings (Top 10)</div>
+        <div style={{fontSize:56,fontWeight:800,fontFamily:"'Syne',sans-serif",color:overlapSignal.cor,lineHeight:1}}>{overlapPct.toFixed(1)}%</div>
+        <div style={{fontSize:14,color:overlapSignal.cor,fontWeight:700,marginTop:6}}>{overlapSignal.label}</div>
+        <div style={{fontSize:12,color:C.textSub,marginTop:8}}>{overlapSignal.desc}</div>
+        <div style={{display:"flex",justifyContent:"center",gap:24,marginTop:16,fontSize:12,color:C.muted}}>
+          <span>Sobreposição Setorial: <b style={{color:C.text}}>{sectorOverlap.toFixed(1)}%</b></span>
+          <span>Holdings compartilhados: <b style={{color:C.text}}>{holdingsTable.filter(h=>h.wA>0&&h.wB>0).length}</b></span>
+        </div>
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+        {/* Holdings table */}
+        <div style={S.card}>
+          <SecaoTitulo titulo="Análise de Holdings" sub="Peso em cada fundo"/>
+          <table style={{width:"100%",borderCollapse:"collapse"}}>
+            <thead>
+              <tr>
+                <th style={{textAlign:"left",fontSize:10,color:C.muted,padding:"6px 4px",borderBottom:"1px solid "+C.border}}>Ativo</th>
+                <th style={{textAlign:"center",fontSize:10,color:C.accent,padding:"6px 4px",borderBottom:"1px solid "+C.border}}>{selA}</th>
+                <th style={{textAlign:"center",fontSize:10,color:C.blue,padding:"6px 4px",borderBottom:"1px solid "+C.border}}>{selB}</th>
+                <th style={{textAlign:"center",fontSize:10,color:C.gold,padding:"6px 4px",borderBottom:"1px solid "+C.border}}>Overlap</th>
+              </tr>
+            </thead>
+            <tbody>
+              {holdingsTable.slice(0,12).map(h=>(
+                <tr key={h.ticker}>
+                  <td style={{fontSize:12,color:C.text,padding:"5px 4px",borderBottom:"1px solid "+C.border+"33",fontWeight:600}}>{h.ticker}</td>
+                  <td style={{textAlign:"center",fontSize:11,color:h.wA>0?C.accent:C.muted,padding:"5px 4px",borderBottom:"1px solid "+C.border+"33"}}>{h.wA>0?h.wA.toFixed(1)+"%":"—"}</td>
+                  <td style={{textAlign:"center",fontSize:11,color:h.wB>0?C.blue:C.muted,padding:"5px 4px",borderBottom:"1px solid "+C.border+"33"}}>{h.wB>0?h.wB.toFixed(1)+"%":"—"}</td>
+                  <td style={{textAlign:"center",fontSize:11,fontWeight:700,color:h.overlap>0?C.gold:C.muted,padding:"5px 4px",borderBottom:"1px solid "+C.border+"33"}}>{h.overlap>0?h.overlap.toFixed(1)+"%":"—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Custo e recomendação */}
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          <div style={S.card}>
+            <SecaoTitulo titulo="Impacto no Custo" sub="Simulação em R$ 100.000 investidos"/>
+            {[
+              {label:"Custo anual com ambos",val:"R$ "+costBoth.toFixed(0),cor:C.red},
+              {label:"Custo só com "+selA,val:"R$ "+costA.toFixed(0),cor:C.accent},
+              {label:"Economia potencial",val:"R$ "+Math.abs(savings).toFixed(0)+"/ano",cor:C.gold},
+            ].map(k=>(
+              <div key={k.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid "+C.border+"44"}}>
+                <span style={{fontSize:12,color:C.textSub}}>{k.label}</span>
+                <span style={{fontSize:14,fontWeight:700,color:k.cor}}>{k.val}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{...S.card,background:overlapSignal.cor+"12",border:"1px solid "+overlapSignal.cor+"44"}}>
+            <div style={{fontSize:12,fontWeight:700,color:overlapSignal.cor,marginBottom:8}}>💡 Recomendação</div>
+            <div style={{fontSize:12,color:C.textSub,lineHeight:1.7}}>
+              {overlapPct > 50
+                ? "Alta sobreposição — considere manter apenas um dos ETFs. "+selA+" e "+selB+" investem em ativos similares, gerando custo duplo sem benefício real de diversificação."
+                : overlapPct > 25
+                ? "Sobreposição moderada — pode fazer sentido manter ambos se os objetivos de alocação forem distintos. Avalie o custo adicional vs o benefício de diversificação incremental."
+                : "Baixa sobreposição — "+selA+" e "+selB+" são complementares e podem ser mantidos juntos para uma diversificação mais ampla sem redundância relevante."}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TabETFComparador() {
+  const [selA, setSelA] = useState("SPY");
+  const [selB, setSelB] = useState("QQQ");
+  const [selC, setSelC] = useState("IWDA");
+  const tickers = ETF_DB.map(e=>e.ticker);
+  const A = ETF_DB.find(e=>e.ticker===selA)||ETF_DB[0];
+  const B = ETF_DB.find(e=>e.ticker===selB)||ETF_DB[1];
+  const C2 = ETF_DB.find(e=>e.ticker===selC)||ETF_DB[2];
+  const ETFs = [A, B, C2];
+  const COLS = [{label:"📊 Estrutura",rows:[
+    {k:"Índice",f:e=>e.indice},{k:"Tipo",f:e=>e.tipo},{k:"País",f:e=>e.country},
+    {k:"Moeda",f:e=>e.currency},{k:"Nº Holdings",f:e=>e.n?.toLocaleString()},
+  ]},{label:"💰 Custo",rows:[
+    {k:"TER (%/a)",f:e=>e.ter?.toFixed(2)+"%",cor:e=>e.ter===Math.min(A.ter,B.ter,C2.ter)?C.accent:C.text},
+    {k:"Tracking Error",f:e=>e.te?.toFixed(2)+"%",cor:e=>e.te===Math.min(A.te,B.te,C2.te)?C.accent:C.text},
+    {k:"Tracking Diff.",f:e=>e.td?.toFixed(2)+"%",cor:e=>e.td===Math.min(A.td,B.td,C2.td)?C.accent:C.text},
+    {k:"Spread B/A",f:e=>e.spread?.toFixed(2)+"%"},
+    {k:"AUM",f:e=>"$"+(e.aum/1e9).toFixed(0)+"B"},
+  ]},{label:"📈 Performance",rows:[
+    {k:"Retorno 5A",f:e=>e.cumGrowth5y?.toFixed(1)+"%",cor:e=>e.cumGrowth5y===Math.max(A.cumGrowth5y,B.cumGrowth5y,C2.cumGrowth5y)?C.accent:C.text},
+    {k:"Dividend Yield",f:e=>e.divYield?.toFixed(2)+"%",cor:e=>e.divYield===Math.max(A.divYield,B.divYield,C2.divYield)?C.accent:C.text},
+    {k:"Frequência Div.",f:e=>e.divFreq||"-"},
+  ]},{label:"⚠ Risco",rows:[
+    {k:"DD 2008",f:e=>e.dd2008?.toFixed(1)+"%",cor:e=>e.dd2008===Math.max(A.dd2008,B.dd2008,C2.dd2008)?C.accent:C.red},
+    {k:"DD COVID-20",f:e=>e.dd2020?.toFixed(1)+"%",cor:e=>e.dd2020===Math.max(A.dd2020,B.dd2020,C2.dd2020)?C.accent:C.red},
+    {k:"DD 2022",f:e=>e.dd2022?.toFixed(1)+"%",cor:e=>e.dd2022===Math.max(A.dd2022,B.dd2022,C2.dd2022)?C.accent:C.red},
+  ]}];
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:16}}>
+      <SecaoTitulo titulo="Comparador de ETFs" sub="Compare até 3 ETFs lado a lado — custo, risco e performance"/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+        {[{sel:selA,set:setSelA,label:"ETF A"},{sel:selB,set:setSelB,label:"ETF B"},{sel:selC,set:setSelC,label:"ETF C"}].map(({sel,set,label})=>(
+          <div key={label} style={{...S.card,padding:"12px 14px"}}>
+            <div style={{fontSize:10,color:C.muted,marginBottom:6,textTransform:"uppercase"}}>{label}</div>
+            <select style={{...S.sel,width:"100%"}} value={sel} onChange={e=>set(e.target.value)}>
+              {tickers.map(t=><option key={t} value={t}>{t}</option>)}
+            </select>
+            <div style={{fontSize:11,color:C.textSub,marginTop:6}}>{ETF_DB.find(e=>e.ticker===sel)?.nome}</div>
+          </div>
+        ))}
+      </div>
+
+      {COLS.map(col=>(
+        <div key={col.label} style={S.card}>
+          <div style={{fontSize:12,fontWeight:700,color:C.accent,marginBottom:12}}>{col.label}</div>
+          <table style={{width:"100%",borderCollapse:"collapse"}}>
+            <thead>
+              <tr>
+                <th style={{textAlign:"left",fontSize:10,color:C.muted,padding:"6px 8px",borderBottom:"1px solid "+C.border}}>Métrica</th>
+                {ETFs.map(e=><th key={e.ticker} style={{textAlign:"center",fontSize:11,color:C.accent,padding:"6px 8px",borderBottom:"1px solid "+C.border}}>{e.ticker}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {col.rows.map(row=>(
+                <tr key={row.k}>
+                  <td style={{fontSize:12,color:C.muted,padding:"7px 8px",borderBottom:"1px solid "+C.border+"44"}}>{row.k}</td>
+                  {ETFs.map(e=>(
+                    <td key={e.ticker} style={{textAlign:"center",fontSize:13,fontWeight:700,padding:"7px 8px",borderBottom:"1px solid "+C.border+"44",color:row.cor?row.cor(e):C.text}}>
+                      {row.f(e)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+
+      {/* Radar de fatores */}
+      <div style={S.card}>
+        <SecaoTitulo titulo="Perfil de Fatores" sub="Exposição aos fatores de risco/retorno (0 = neutro, 1 = alto)"/>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:12}}>
+          {ETFs.map(e=>(
+            <div key={e.ticker} style={{background:C.surface,borderRadius:10,padding:"12px 14px"}}>
+              <div style={{fontSize:12,fontWeight:700,color:C.accent,marginBottom:10}}>{e.ticker} — {e.nome}</div>
+              {Object.entries(e.factors||{}).map(([fator,val])=>(
+                <div key={fator} style={{marginBottom:7}}>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:2}}>
+                    <span style={{color:C.textSub,textTransform:"capitalize"}}>{fator}</span>
+                    <span style={{color:C.text,fontWeight:600}}>{val>0?"+":""}{(val*100).toFixed(0)}</span>
+                  </div>
+                  <div style={{background:C.border,borderRadius:4,height:4}}>
+                    <div style={{width:Math.abs(val)*100+"%",height:"100%",background:val>=0?C.accent:C.red,borderRadius:4,marginLeft:val<0?(100-Math.abs(val)*100)+"%":0}}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TabETFOverview({ filtered, quotes }) {
   const [sel, setSel] = useState("SPY");
   const etf = ETF_DB.find(e => e.ticker === sel) || ETF_DB[0];
@@ -12348,6 +12857,10 @@ export default function App() {
     {id:"etfholdings",  icon:"📦", label:"ETF — Holdings & Exposição"},
     {id:"etfperf",      icon:"📈", label:"ETF — Performance & TE"},
     {id:"etfscreener",  icon:"🔍", label:"ETF — Screener & Builder"},
+    {id:"etfcompar",   icon:"⚖",  label:"ETF — Comparador"},
+    {id:"etfoverlap",  icon:"🔗", label:"ETF — Fund Overlap"},
+    {id:"etffatores",  icon:"🧬", label:"ETF — Análise de Fatores"},
+    {id:"custolp",     icon:"💸", label:"Simulador de Custo LP"},
     {id:"ajuda", icon:"📖", label:"Guia de Métricas"},
     {id:"sentimento", icon:"🧠", label:"Sentimento de Mercado"},
     {id:"transacoes", icon:"📋", label:"Transações"},
@@ -12373,7 +12886,7 @@ export default function App() {
   };
   const GRUPOS = [
     {label:"Core",           ids:["dashboard","portfolio","benchmark"]},
-    {label:"🌐 ETF Analytics",       ids:["etfoverview","etfholdings","etfperf","etfscreener"]},
+    {label:"🌐 ETF Analytics",       ids:["etfoverview","etfholdings","etfperf","etfscreener","etfcompar","etfoverlap","etffatores","custolp"]},
     {label:"📊 Análise de Ativos", ids:["tecnica","fundadv","fiis","rfadv"]},
     {label:"🏦 Alternativos & FO", ids:["pevc","fxreport"]},
     {label:"Risco & Métricas",ids:["riscos","quant","avancado","quantmetrics","tier1","tier2","tier3","tier4","tier5"]},
@@ -12642,6 +13155,10 @@ export default function App() {
      {tab==="etfholdings" && <TabETFHoldings  filtered={filtered} quotes={quotes}/>}
      {tab==="etfperf"     && <TabETFPerformance filtered={filtered} quotes={quotes}/>}
      {tab==="etfscreener" && <TabETFScreener   filtered={filtered} quotes={quotes} totalVal={totalVal}/>}
+     {tab==="etfcompar"  && <TabETFComparador/>}
+     {tab==="etfoverlap" && <TabETFOverlap/>}
+     {tab==="etffatores" && <TabETFFatores/>}
+     {tab==="custolp"    && <TabCustoLP/>}
      {tab==="tecnica"   && <TabTecnica   filtered={filtered} quotes={quotes}/>}
      {tab==="fundadv"   && <TabFundAdv   filtered={filtered} quotes={quotes} totalVal={totalVal}/>}
      {tab==="fiis"      && <TabFIIs      filtered={filtered} quotes={quotes} totalVal={totalVal}/>}
