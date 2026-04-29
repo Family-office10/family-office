@@ -5732,456 +5732,612 @@ function TabESGAvancado({ byCat, filtered=[], quotes={}, totalVal }) {
     </div>
   );
 }
+
 function TabResearch({ assets=[], setAssets, quotes={} }) {
-  const [ticker, setTicker] = useState("AAPL");
-  const [input, setInput]   = useState("AAPL");
-  const [tipo, setTipo]     = useState("eua"); // "br" | "eua" | "cripto" | "etf"
+  const [input, setInput]     = useState("AAPL");
+  const [tipo, setTipo]       = useState("eua");
   const [loading, setLoading] = useState(false);
-  const [data, setData]     = useState(null);
-  const [erro, setErro]     = useState("");
-  const [aba, setAba]       = useState("overview");
+  const [data, setData]       = useState(null);
+  const [erro, setErro]       = useState("");
+  const [aba, setAba]         = useState("overview");
+  const [toasts2, setToasts2] = useState([]);
 
   const TIPOS = [
-    {id:"br",   label:"Ações BR",   ex:"PETR4, VALE3, ITUB4"},
-    {id:"eua",  label:"Ações EUA",  ex:"AAPL, MSFT, NVDA"},
-    {id:"etf",  label:"ETF/Fundo",  ex:"SPY, QQQ, BOVA11"},
-    {id:"cripto",label:"Cripto",    ex:"BTC-USD, ETH-USD"},
-    {id:"fii",  label:"FIIs",       ex:"HGLG11, XPML11"},
+    {id:"br",    label:"🇧🇷 Ações BR",  ex:"PETR4, VALE3, ITUB4"},
+    {id:"eua",   label:"🇺🇸 Ações EUA", ex:"AAPL, MSFT, NVDA"},
+    {id:"etf",   label:"📦 ETF",        ex:"SPY, QQQ, BOVA11"},
+    {id:"cripto",label:"₿ Cripto",      ex:"BTC-USD, ETH-USD"},
+    {id:"fii",   label:"🏢 FIIs",       ex:"HGLG11, XPML11"},
   ];
 
   const ABAS_RES = [
-    {id:"overview",  label:"📊 Overview"},
-    {id:"fundamentos",label:"📋 Fundamentos"},
-    {id:"tecnica",   label:"📈 Técnica"},
-    {id:"risco",     label:"⚠ Risco"},
-    {id:"dividendos",label:"💸 Dividendos"},
-    {id:"comparacao",label:"🔄 Comparação"},
+    {id:"overview",    label:"📊 Overview"},
+    {id:"valuation",   label:"💰 Valuation"},
+    {id:"qualidade",   label:"💼 Qualidade"},
+    {id:"crescimento", label:"📈 Crescimento"},
+    {id:"tecnica",     label:"📉 Técnica"},
+    {id:"risco",       label:"⚠ Risco"},
+    {id:"dividendos",  label:"💸 Dividendos"},
+    {id:"scores",      label:"🎯 Scores"},
   ];
 
+  // ── FETCH ──────────────────────────────────────────────────
   async function buscar() {
     if(!input.trim()) return;
     const t = input.trim().toUpperCase();
-    setLoading(true); setErro(""); setData(null); setTicker(t);
+    setLoading(true); setErro(""); setData(null);
     try {
-      let preco = 0, changePct = 0, changeAbs = 0, high = 0, low = 0, vol = 0, open = 0, prev = 0;
-      let nome = t, moeda = tipo==="br"||tipo==="fii"?"BRL":"USD";
-
       if(tipo==="br"||tipo==="fii") {
-        // Brapi: cotação + fundamentus
-        const [quoteRes, detailRes] = await Promise.all([
-          fetch(`https://brapi.dev/api/quote/${t}?token=${CFG.brapiKey}&range=1mo&interval=1d`),
-          fetch(`https://brapi.dev/api/quote/${t}?token=${CFG.brapiKey}&modules=summaryProfile,financialData,defaultKeyStatistics,balanceSheetHistory,incomeStatementHistory`)
+        const [qRes, dRes] = await Promise.all([
+          fetch(`https://brapi.dev/api/quote/${t}?token=${CFG.brapiKey}&range=3mo&interval=1d`),
+          fetch(`https://brapi.dev/api/quote/${t}?token=${CFG.brapiKey}&modules=summaryProfile,financialData,defaultKeyStatistics`)
         ]);
-        const quoteData = await quoteRes.json();
-        const detailData = await detailRes.json();
-        const q = quoteData.results?.[0] || {};
-        const d = detailData.results?.[0] || {};
-        preco = q.regularMarketPrice||0;
-        changePct = q.regularMarketChangePercent||0;
-        changeAbs = q.regularMarketChange||0;
-        high = q.regularMarketDayHigh||0;
-        low  = q.regularMarketDayLow||0;
-        vol  = q.regularMarketVolume||0;
-        open = q.regularMarketOpen||0;
-        prev = q.regularMarketPreviousClose||0;
-        nome = q.longName||q.shortName||t;
-        const hist = (q.historicalDataPrice||[]).map(h=>({date:new Date(h.date*1000).toLocaleDateString("pt-BR",{month:"short",day:"numeric"}),close:h.close,vol:h.volume}));
-        setData({
-          ticker:t, nome, preco, changePct, changeAbs, high, low, vol, open, prev, moeda,
-          hist, tipo,
-          // Fundamentus
-          pe: d.defaultKeyStatistics?.trailingPE||d.summaryProfile?.trailingPE||null,
-          pb: d.defaultKeyStatistics?.priceToBook||null,
-          ps: d.defaultKeyStatistics?.priceToSalesTrailing12Months||null,
-          dy: q.dividendYield||d.summaryProfile?.dividendYield||null,
-          roe: d.financialData?.returnOnEquity||null,
-          roa: d.financialData?.returnOnAssets||null,
-          margemLiquida: d.financialData?.profitMargins||null,
-          margemBruta: d.financialData?.grossMargins||null,
-          margemEbitda: d.financialData?.ebitdaMargins||null,
-          receitaAnual: d.financialData?.totalRevenue||null,
-          lucroLiquido: d.financialData?.netIncomeToCommon||null,
-          ebitda: d.financialData?.ebitda||null,
-          dividaLiquida: d.financialData?.totalDebt||null,
-          caixa: d.financialData?.totalCash||null,
-          betaFund: d.defaultKeyStatistics?.beta||null,
-          mktcap: q.marketCap||null,
-          sector: d.summaryProfile?.sector||null,
-          industry: d.summaryProfile?.industry||null,
-          employees: d.summaryProfile?.fullTimeEmployees||null,
-          desc: d.summaryProfile?.longBusinessSummary||null,
-          // 52W
-          high52w: q.fiftyTwoWeekHigh||null,
-          low52w: q.fiftyTwoWeekLow||null,
-          avgVol20d: q.averageDailyVolume3Month||null,
-          // Dividendos
-          divRate: q.dividendRate||null,
-          divFreq: "anual",
-          exDivDate: q.exDividendDate||null,
-        });
-      } else {
-        // Yahoo Finance via proxy público (sem CORS)
-        const yahooSym = tipo==="cripto"?t.replace("-","-"):t;
-        const proxyUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSym)}?range=3mo&interval=1d&includePrePost=false`;
-        const summaryUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(yahooSym)}?modules=summaryProfile,financialData,defaultKeyStatistics,earningsTrend`;
-
-        // Use allorigins as CORS proxy
-        const toProxy = url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-
-        const [chartRes, summaryRes] = await Promise.all([
-          fetch(toProxy(proxyUrl)),
-          fetch(toProxy(summaryUrl)),
-        ]);
-        const chartJson = await chartRes.json();
-        const summaryJson = await summaryRes.json();
-
-        const meta = chartJson?.chart?.result?.[0]?.meta || {};
-        const timestamps = chartJson?.chart?.result?.[0]?.timestamp || [];
-        const closes_raw = chartJson?.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
-        const volumes_raw = chartJson?.chart?.result?.[0]?.indicators?.quote?.[0]?.volume || [];
-
-        preco = meta.regularMarketPrice || 0;
-        prev  = meta.previousClose || meta.chartPreviousClose || 0;
-        changePct = prev>0?((preco-prev)/prev*100):0;
-        changeAbs = preco - prev;
-        high  = meta.regularMarketDayHigh || 0;
-        low   = meta.regularMarketDayLow || 0;
-        open  = meta.regularMarketOpen || 0;
-        vol   = meta.regularMarketVolume || 0;
-        nome  = meta.longName || meta.shortName || t;
-        moeda = meta.currency || "USD";
-
-        const hist = timestamps.map((ts,i) => ({
-          date: new Date(ts*1000).toLocaleDateString("pt-BR",{month:"short",day:"numeric"}),
-          close: +(closes_raw[i]||0).toFixed(2),
-          vol: volumes_raw[i]||0,
+        const qJson = await qRes.json();
+        const dJson = await dRes.json();
+        const q = qJson.results?.[0]||{};
+        const d = dJson.results?.[0]||{};
+        const ks = d.defaultKeyStatistics||{};
+        const fd = d.financialData||{};
+        const sp = d.summaryProfile||{};
+        const hist = (q.historicalDataPrice||[]).map(h=>({
+          date:new Date(h.date*1000).toLocaleDateString("pt-BR",{month:"short",day:"numeric"}),
+          close:+(h.close||0).toFixed(2), vol:h.volume||0, open:h.open||0, high:h.high||0, low:h.low||0
         })).filter(h=>h.close>0);
-
-        // Technical indicators
         const closes = hist.map(h=>h.close);
-        const sma20 = closes.length>=20?closes.slice(-20).reduce((s,v)=>s+v,0)/20:null;
-        const sma50 = closes.length>=50?closes.slice(-50).reduce((s,v)=>s+v,0)/50:null;
-        let rsi = null;
-        if(closes.length>=15){
-          const deltas = closes.slice(-15).map((v,i,a)=>i>0?v-a[i-1]:0).slice(1);
-          const gains = deltas.filter(d=>d>0).reduce((s,v)=>s+v,0)/14;
-          const losses = Math.abs(deltas.filter(d=>d<0).reduce((s,v)=>s+v,0)/14);
-          rsi = losses===0?100:+(100-100/(1+gains/losses)).toFixed(1);
-        }
-
-        // Fundamentals from Yahoo Summary
-        const fd = summaryJson?.quoteSummary?.result?.[0]?.financialData || {};
-        const ks = summaryJson?.quoteSummary?.result?.[0]?.defaultKeyStatistics || {};
-        const sp = summaryJson?.quoteSummary?.result?.[0]?.summaryProfile || {};
-
-        setData({
-          ticker:t, nome, preco, changePct, changeAbs, high, low, vol, open, prev, moeda,
-          hist, tipo,
-          pe: ks.trailingPE?.raw || ks.forwardPE?.raw || null,
-          pb: ks.priceToBook?.raw || null,
-          ps: ks.priceToSalesTrailing12Months?.raw || null,
-          dy: ks.dividendYield?.raw ? ks.dividendYield.raw*100 : null,
-          roe: fd.returnOnEquity?.raw || null,
-          roa: fd.returnOnAssets?.raw || null,
-          margemLiquida: fd.profitMargins?.raw || null,
-          margemBruta: fd.grossMargins?.raw || null,
-          margemEbitda: fd.ebitdaMargins?.raw || null,
-          ebitda: fd.ebitda?.raw || null,
-          dividaLiquida: fd.totalDebt?.raw || null,
-          caixa: fd.totalCash?.raw || null,
-          betaFund: ks.beta?.raw || null,
-          mktcap: ks.marketCap?.raw || null,
-          sector: sp.sector || null,
-          industry: sp.industry || null,
-          desc: sp.longBusinessSummary || null,
-          high52w: ks.fiftyTwoWeekHigh?.raw || meta.fiftyTwoWeekHigh || null,
-          low52w: ks.fiftyTwoWeekLow?.raw || meta.fiftyTwoWeekLow || null,
-          avgVol20d: ks.averageVolume?.raw || null,
-          divRate: ks.dividendRate?.raw || null,
-          divFreq: "anual",
-          exDivDate: ks.exDividendDate?.fmt || null,
-          eps: ks.trailingEps?.raw || null,
-          currentRatio: fd.currentRatio?.raw || null,
-          debtEquity: fd.debtToEquity?.raw ? fd.debtToEquity.raw/100 : null,
-          revenueGrowth: fd.revenueGrowth?.raw ? fd.revenueGrowth.raw*100 : null,
-          epsGrowth: fd.earningsGrowth?.raw ? fd.earningsGrowth.raw*100 : null,
-          return1Y: null,
-          returnYTD: null,
-          volatility: null,
-          sma20, sma50, rsi,
-          employees: sp.fullTimeEmployees || null,
-        });
+        setData(buildData(t, q.longName||q.shortName||t, "BRL", {
+          preco:q.regularMarketPrice||0, changePct:q.regularMarketChangePercent||0,
+          changeAbs:q.regularMarketChange||0, high:q.regularMarketDayHigh||0,
+          low:q.regularMarketDayLow||0, vol:q.regularMarketVolume||0,
+          open:q.regularMarketOpen||0, prev:q.regularMarketPreviousClose||0,
+          mktcap:q.marketCap||null, high52w:q.fiftyTwoWeekHigh||null, low52w:q.fiftyTwoWeekLow||null,
+          avgVol20d:q.averageDailyVolume3Month||null,
+          pe:ks.trailingPE||null, peForward:ks.forwardPE||null,
+          pb:ks.priceToBook||null, ps:ks.priceToSalesTrailing12Months||null,
+          dy:q.dividendYield||(ks.dividendYield?ks.dividendYield*100:null),
+          roe:fd.returnOnEquity||null, roa:fd.returnOnAssets||null,
+          margemLiquida:fd.profitMargins||null, margemBruta:fd.grossMargins||null,
+          margemEbitda:fd.ebitdaMargins||null,
+          ebitda:fd.ebitda||null, dividaLiquida:fd.totalDebt||null, caixa:fd.totalCash||null,
+          betaFund:ks.beta||null, eps:ks.trailingEps||null, epsForward:ks.forwardEps||null,
+          currentRatio:fd.currentRatio||null, debtEquity:fd.debtToEquity||null,
+          revenueGrowth:fd.revenueGrowth?fd.revenueGrowth*100:null,
+          epsGrowth:fd.earningsGrowth?fd.earningsGrowth*100:null,
+          divRate:q.dividendRate||ks.dividendRate||null, divFreq:"anual",
+          exDivDate:ks.exDividendDate||null,
+          sector:sp.sector||null, industry:sp.industry||null,
+          desc:sp.longBusinessSummary||null,
+          employees:sp.fullTimeEmployees||null,
+          hist, closes, tipo,
+        }));
+      } else {
+        const yahooSym = t;
+        const toProxy = url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+        const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSym)}?range=1y&interval=1d`;
+        const summaryUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(yahooSym)}?modules=summaryProfile,financialData,defaultKeyStatistics,earningsTrend,earningsHistory,cashflowStatementHistory`;
+        const [cRes, sRes] = await Promise.all([fetch(toProxy(chartUrl)), fetch(toProxy(summaryUrl))]);
+        const cJson = await cRes.json();
+        const sJson = await sRes.json();
+        const meta = cJson?.chart?.result?.[0]?.meta||{};
+        const ts   = cJson?.chart?.result?.[0]?.timestamp||[];
+        const rawC = cJson?.chart?.result?.[0]?.indicators?.quote?.[0]?.close||[];
+        const rawV = cJson?.chart?.result?.[0]?.indicators?.quote?.[0]?.volume||[];
+        const rawO = cJson?.chart?.result?.[0]?.indicators?.quote?.[0]?.open||[];
+        const rawH = cJson?.chart?.result?.[0]?.indicators?.quote?.[0]?.high||[];
+        const rawL = cJson?.chart?.result?.[0]?.indicators?.quote?.[0]?.low||[];
+        const hist = ts.map((t2,i)=>({
+          date:new Date(t2*1000).toLocaleDateString("pt-BR",{month:"short",day:"numeric"}),
+          close:+(rawC[i]||0).toFixed(2), vol:rawV[i]||0,
+          open:+(rawO[i]||0).toFixed(2), high:+(rawH[i]||0).toFixed(2), low:+(rawL[i]||0).toFixed(2)
+        })).filter(h=>h.close>0);
+        const closes = hist.map(h=>h.close);
+        const preco = meta.regularMarketPrice||0;
+        const prev  = meta.previousClose||meta.chartPreviousClose||0;
+        const fd = sJson?.quoteSummary?.result?.[0]?.financialData||{};
+        const ks = sJson?.quoteSummary?.result?.[0]?.defaultKeyStatistics||{};
+        const sp = sJson?.quoteSummary?.result?.[0]?.summaryProfile||{};
+        setData(buildData(t, meta.longName||meta.shortName||t, meta.currency||"USD", {
+          preco, changePct:prev>0?(preco-prev)/prev*100:0, changeAbs:preco-prev,
+          high:meta.regularMarketDayHigh||0, low:meta.regularMarketDayLow||0,
+          vol:meta.regularMarketVolume||0, open:meta.regularMarketOpen||0, prev,
+          mktcap:ks.marketCap?.raw||null, high52w:ks.fiftyTwoWeekHigh?.raw||meta.fiftyTwoWeekHigh||null,
+          low52w:ks.fiftyTwoWeekLow?.raw||meta.fiftyTwoWeekLow||null,
+          avgVol20d:ks.averageVolume?.raw||null,
+          pe:ks.trailingPE?.raw||null, peForward:ks.forwardPE?.raw||null,
+          pb:ks.priceToBook?.raw||null, ps:ks.priceToSalesTrailing12Months?.raw||null,
+          dy:ks.dividendYield?.raw?ks.dividendYield.raw*100:null,
+          roe:fd.returnOnEquity?.raw||null, roa:fd.returnOnAssets?.raw||null,
+          margemLiquida:fd.profitMargins?.raw||null, margemBruta:fd.grossMargins?.raw||null,
+          margemEbitda:fd.ebitdaMargins?.raw||null,
+          ebitda:fd.ebitda?.raw||null, dividaLiquida:fd.totalDebt?.raw||null,
+          caixa:fd.totalCash?.raw||null, betaFund:ks.beta?.raw||null,
+          eps:ks.trailingEps?.raw||null, epsForward:ks.forwardEps?.raw||null,
+          currentRatio:fd.currentRatio?.raw||null,
+          debtEquity:fd.debtToEquity?.raw?fd.debtToEquity.raw/100:null,
+          revenueGrowth:fd.revenueGrowth?.raw?fd.revenueGrowth.raw*100:null,
+          epsGrowth:fd.earningsGrowth?.raw?fd.earningsGrowth.raw*100:null,
+          divRate:ks.dividendRate?.raw||null, divFreq:"anual",
+          exDivDate:ks.exDividendDate?.fmt||null,
+          sector:sp.sector||null, industry:sp.industry||null,
+          desc:sp.longBusinessSummary||null, employees:sp.fullTimeEmployees||null,
+          hist, closes, tipo,
+        }));
       }
     } catch(e) {
-      setErro("Erro ao buscar dados. Verifique o ticker e tente novamente. ("+e.message+")");
+      setErro("Erro ao buscar dados: "+e.message+". Verifique o ticker e tente novamente.");
     }
     setLoading(false);
   }
 
-  function addToPortfolio() {
-    if(!data||!setAssets) return;
-    const catId = tipo==="br"?"acoes_br":tipo==="fii"?"fiis":tipo==="cripto"?"cripto":tipo==="etf"?"etfs":"acoes_eua";
-    const newAsset = { id: Date.now(), family: "Familia Silva", category: catId, ticker: data.ticker, name: data.nome, qty: 0, avgPrice: data.preco };
-    setAssets(prev => [...prev, newAsset]);
-    setToasts && setToasts([`✅ ${data.ticker} adicionado ao portfólio!`]);
+  // ── BUILD DATA ─────────────────────────────────────────────
+  function buildData(ticker, nome, moeda, d) {
+    const closes = d.closes||[];
+    // Technical indicators
+    const sma20  = closes.length>=20?closes.slice(-20).reduce((s,v)=>s+v,0)/20:null;
+    const sma50  = closes.length>=50?closes.slice(-50).reduce((s,v)=>s+v,0)/50:null;
+    const sma200 = closes.length>=200?closes.slice(-200).reduce((s,v)=>s+v,0)/200:null;
+    // EMA20
+    const ema20 = closes.length>=20?(()=>{
+      const k=2/21; let e=closes[closes.length-20];
+      closes.slice(-19).forEach(v=>{e=v*k+e*(1-k);}); return +e.toFixed(2);
+    })():null;
+    // RSI(14)
+    let rsi=null;
+    if(closes.length>=15){
+      const deltas=closes.slice(-15).map((v,i,a)=>i>0?v-a[i-1]:0).slice(1);
+      const gains=deltas.filter(v=>v>0).reduce((s,v)=>s+v,0)/14;
+      const losses=Math.abs(deltas.filter(v=>v<0).reduce((s,v)=>s+v,0)/14);
+      rsi=losses===0?100:+(100-100/(1+gains/losses)).toFixed(1);
+    }
+    // MACD(12,26,9)
+    let macd=null, macdSignal=null, macdHist=null;
+    if(closes.length>=26){
+      const ema=(arr,n)=>{const k=2/(n+1);let e=arr[0];arr.slice(1).forEach(v=>{e=v*k+e*(1-k);});return e;};
+      const ema12=ema(closes.slice(-26),12);
+      const ema26=ema(closes.slice(-26),26);
+      macd=+(ema12-ema26).toFixed(3);
+    }
+    // Bollinger Bands (20,2)
+    let bbUpper=null,bbLower=null,bbMid=null;
+    if(sma20&&closes.length>=20){
+      const slice=closes.slice(-20);
+      const std=Math.sqrt(slice.reduce((s,v)=>s+Math.pow(v-sma20,2),0)/20);
+      bbUpper=+(sma20+2*std).toFixed(2); bbLower=+(sma20-2*std).toFixed(2); bbMid=+sma20.toFixed(2);
+    }
+    // Volatility
+    let volatility=null;
+    if(closes.length>=20){
+      const rets=closes.slice(-21).map((v,i,a)=>i>0?Math.log(v/a[i-1]):0).slice(1);
+      const mean=rets.reduce((s,v)=>s+v,0)/rets.length;
+      const std=Math.sqrt(rets.reduce((s,v)=>s+Math.pow(v-mean,2),0)/rets.length);
+      volatility=+(std*Math.sqrt(252)*100).toFixed(1);
+    }
+    // Returns
+    const ret1m=closes.length>=21?+(((closes[closes.length-1]/closes[closes.length-22])-1)*100).toFixed(1):null;
+    const ret3m=closes.length>=63?+(((closes[closes.length-1]/closes[closes.length-64])-1)*100).toFixed(1):null;
+    const ret6m=closes.length>=126?+(((closes[closes.length-1]/closes[closes.length-127])-1)*100).toFixed(1):null;
+    const ret1y=closes.length>=252?+(((closes[closes.length-1]/closes[closes.length-253])-1)*100).toFixed(1):null;
+    // ATR(14)
+    let atr=null;
+    if(d.hist?.length>=14){
+      const trs=d.hist.slice(-14).map((h,i,a)=>{
+        if(i===0) return h.high-h.low;
+        return Math.max(h.high-h.low,Math.abs(h.high-a[i-1].close),Math.abs(h.low-a[i-1].close));
+      });
+      atr=+(trs.reduce((s,v)=>s+v,0)/14).toFixed(2);
+    }
+    // Derived metrics
+    const pe=d.pe; const eps=d.eps; const pb=d.pb; const preco=d.preco;
+    const pegRatio=pe&&d.epsGrowth&&d.epsGrowth>0?+(pe/d.epsGrowth).toFixed(2):null;
+    const grahamNumber=eps&&pb&&eps>0&&preco>0?+(Math.sqrt(22.5*Math.abs(eps)*(preco/Math.max(pb,0.1)))).toFixed(2):null;
+    const fcfYield=d.ebitda&&d.mktcap&&d.mktcap>0?+((d.ebitda*0.7/d.mktcap)*100).toFixed(2):null;
+    const evEbitda=d.ebitda&&d.mktcap&&d.ebitda>0?+((d.mktcap+(d.dividaLiquida||0))/(d.ebitda)).toFixed(1):null;
+    const netDebtEbitda=d.ebitda&&d.dividaLiquida&&d.ebitda>0?+(d.dividaLiquida/d.ebitda).toFixed(2):null;
+    const interestCoverage=d.ebitda&&d.dividaLiquida?+(d.ebitda/(Math.max(d.dividaLiquida*0.05,1))).toFixed(1):null;
+    // Piotroski F-Score (simplified, 0-9)
+    let fScore=0;
+    if(d.roa&&d.roa>0) fScore++;
+    if(d.revenueGrowth&&d.revenueGrowth>0) fScore+=2;
+    if(d.margemLiquida&&d.margemLiquida>0.05) fScore++;
+    if(d.currentRatio&&d.currentRatio>1.5) fScore+=2;
+    if(d.debtEquity&&d.debtEquity<1) fScore++;
+    if(d.roe&&d.roe>0.1) fScore+=2;
+    // Altman Z-Score (simplified public companies)
+    let zScore=null;
+    if(d.mktcap&&d.dividaLiquida&&d.ebitda&&d.margemLiquida&&preco>0){
+      const x1=0.3; const x2=d.roa?d.roa:0; const x3=d.ebitda?d.ebitda/Math.max(d.mktcap,1):0;
+      const x4=d.mktcap/Math.max(d.dividaLiquida||d.mktcap*0.3,1); const x5=d.revenueGrowth?d.revenueGrowth/100:0.05;
+      zScore=+(1.2*x1+1.4*x2+3.3*x3+0.6*x4+x5).toFixed(2);
+    }
+    // Quality Score (0-100)
+    let qualityScore=50;
+    if(d.roe&&d.roe>0.15) qualityScore+=10;
+    if(d.margemLiquida&&d.margemLiquida>0.1) qualityScore+=10;
+    if(d.currentRatio&&d.currentRatio>1.5) qualityScore+=8;
+    if(d.debtEquity&&d.debtEquity<0.5) qualityScore+=8;
+    if(d.revenueGrowth&&d.revenueGrowth>5) qualityScore+=7;
+    if(d.dy&&d.dy>2) qualityScore+=7;
+    qualityScore=Math.min(100,Math.max(0,qualityScore));
+    // Momentum Score (0-100)
+    let momentumScore=50;
+    if(ret1m&&ret1m>0) momentumScore+=10;
+    if(ret3m&&ret3m>0) momentumScore+=10;
+    if(ret6m&&ret6m>0) momentumScore+=10;
+    if(rsi&&rsi>50&&rsi<70) momentumScore+=10;
+    if(sma20&&preco>sma20) momentumScore+=10;
+    momentumScore=Math.min(100,Math.max(0,momentumScore));
+    // Value Score (0-100)
+    let valueScore=50;
+    if(pe&&pe<15) valueScore+=15;
+    else if(pe&&pe>30) valueScore-=15;
+    if(pb&&pb<1.5) valueScore+=10;
+    if(d.dy&&d.dy>3) valueScore+=10;
+    if(pegRatio&&pegRatio<1) valueScore+=15;
+    valueScore=Math.min(100,Math.max(0,valueScore));
+    const compositeScore=Math.round(qualityScore*0.4+momentumScore*0.3+valueScore*0.3);
+    const recommendation=compositeScore>=70?"✅ Compra":compositeScore>=50?"⚖ Neutro":"⚠ Cautela";
+
+    return {
+      ticker, nome, moeda, tipo:d.tipo,
+      preco:d.preco, changePct:d.changePct, changeAbs:d.changeAbs,
+      high:d.high, low:d.low, vol:d.vol, open:d.open, prev:d.prev,
+      mktcap:d.mktcap, high52w:d.high52w, low52w:d.low52w, avgVol20d:d.avgVol20d,
+      hist:d.hist||[],
+      // Valuation
+      pe, peForward:d.peForward, pb, ps:d.ps, evEbitda, pegRatio, grahamNumber, fcfYield,
+      // Quality
+      roe:d.roe, roa:d.roa, margemLiquida:d.margemLiquida, margemBruta:d.margemBruta,
+      margemEbitda:d.margemEbitda, ebitda:d.ebitda, dividaLiquida:d.dividaLiquida,
+      caixa:d.caixa, currentRatio:d.currentRatio, debtEquity:d.debtEquity,
+      netDebtEbitda, interestCoverage,
+      // Growth
+      revenueGrowth:d.revenueGrowth, epsGrowth:d.epsGrowth,
+      eps:d.eps, epsForward:d.epsForward,
+      ret1m, ret3m, ret6m, ret1y,
+      // Technical
+      sma20, sma50, sma200, ema20, rsi, macd, macdSignal, macdHist,
+      bbUpper, bbLower, bbMid, volatility, atr,
+      // Dividends
+      dy:d.dy, divRate:d.divRate, divFreq:d.divFreq, exDivDate:d.exDivDate,
+      // Risk
+      betaFund:d.betaFund,
+      // Scores
+      fScore, zScore, qualityScore, momentumScore, valueScore, compositeScore, recommendation,
+      // Info
+      sector:d.sector, industry:d.industry, desc:d.desc, employees:d.employees,
+    };
   }
 
-  const fmt2 = (v,d=2,suf="") => v!=null&&!isNaN(v)?fmt(+v,d)+suf:"—";
-  const fmtM = v => v!=null&&!isNaN(v)&&v>0?(v>=1e12?"$"+(v/1e12).toFixed(1)+"T":v>=1e9?"$"+(v/1e9).toFixed(1)+"B":v>=1e6?"$"+(v/1e6).toFixed(1)+"M":"$"+v.toFixed(0)):"—";
-  const pct52w = data?.high52w&&data?.low52w&&data?.preco>0?Math.round((data.preco-data.low52w)/(data.high52w-data.low52w)*100):null;
-  const rsiColor = data?.rsi>70?C.red:data?.rsi<30?C.accent:C.gold;
-  const changColor = (data?.changePct||0)>=0?C.accent:C.red;
+  function addToPortfolio() {
+    if(!data||!setAssets) return;
+    const catMap={br:"acoes_br",fii:"fiis",cripto:"cripto",etf:"etfs",eua:"acoes_eua"};
+    setAssets(prev=>[...prev,{id:Date.now(),family:"Familia Silva",category:catMap[data.tipo]||"outros",ticker:data.ticker,name:data.nome,qty:0,avgPrice:data.preco}]);
+    setToasts2(["✅ "+data.ticker+" adicionado ao portfólio!"]);
+    setTimeout(()=>setToasts2([]),3000);
+  }
+
+  const f2=(v,d=2,s="")=>v!=null&&!isNaN(+v)?fmt(+v,d)+s:"—";
+  const fM=v=>!v||v<=0?"—":v>=1e12?"$"+(v/1e12).toFixed(1)+"T":v>=1e9?"$"+(v/1e9).toFixed(1)+"B":v>=1e6?"$"+(v/1e6).toFixed(1)+"M":"$"+v.toFixed(0);
+  const fMBRL=v=>!v||v<=0?"—":v>=1e9?"R$"+(v/1e9).toFixed(1)+"B":v>=1e6?"R$"+(v/1e6).toFixed(1)+"M":"R$"+v.toFixed(0);
+  const fVal=v=>data?.moeda==="BRL"?fMBRL(v):fM(v);
+  const curr=data?.moeda==="BRL"?"R$":"$";
+  const pct52w=data?.high52w&&data?.low52w&&data?.preco>0?Math.round((data.preco-data.low52w)/(data.high52w-data.low52w)*100):null;
+  const chgC=(data?.changePct||0)>=0?C.accent:C.red;
+
+  // Metric row component
+  const MRow=({label,val,desc,bom,ruim,cor})=>(
+    <div style={{padding:"8px 0",borderBottom:"1px solid "+C.border+"33"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:2}}>
+        <span style={{fontSize:12,color:C.textSub,fontWeight:500}}>{label}</span>
+        <span style={{fontSize:13,fontWeight:700,color:cor||C.text}}>{val}</span>
+      </div>
+      {desc&&<div style={{fontSize:10,color:C.muted,lineHeight:1.4}}>{desc}{bom&&<span style={{color:C.accent}}> · Bom: {bom}</span>}{ruim&&<span style={{color:C.red}}> · Ruim: {ruim}</span>}</div>}
+    </div>
+  );
 
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:16}}>
-      <SecaoTitulo titulo="Research de Ativos" sub="Analise qualquer ativo com métricas completas — BR, EUA, ETF, Cripto, FII"/>
+    <div style={{display:"flex",flexDirection:"column",gap:14}}>
+      <SecaoTitulo titulo="Research de Ativos" sub="50+ métricas em tempo real · BR, EUA, ETF, Cripto, FII"/>
 
-      {/* Search bar */}
+      {/* Toasts */}
+      {toasts2.map((t,i)=>(
+        <div key={i} style={{position:"fixed",top:80,right:24,zIndex:300,background:C.accent,color:"#031A10",padding:"10px 18px",borderRadius:10,fontWeight:700,fontSize:13,boxShadow:"0 4px 20px #00000040"}}>{t}</div>
+      ))}
+
+      {/* Search */}
       <div style={S.card}>
-        <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
-          <div style={{flex:"0 0 auto"}}>
-            <div style={{fontSize:10,color:C.muted,marginBottom:4,textTransform:"uppercase"}}>Tipo de Ativo</div>
-            <div style={{display:"flex",gap:6}}>
-              {TIPOS.map(t=>(
-                <button key={t.id} onClick={()=>setTipo(t.id)}
-                  style={tipo===t.id?S.btnV:{...S.btnO,fontSize:11,padding:"6px 12px"}}>
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div style={{flex:1,minWidth:200}}>
-            <div style={{fontSize:10,color:C.muted,marginBottom:4,textTransform:"uppercase"}}>Ticker · ex: {TIPOS.find(t=>t.id===tipo)?.ex}</div>
-            <div style={{display:"flex",gap:8}}>
-              <input style={{...S.inp,flex:1,fontSize:15,fontWeight:700,textTransform:"uppercase"}}
-                value={input} onChange={e=>setInput(e.target.value.toUpperCase())}
-                onKeyDown={e=>e.key==="Enter"&&buscar()}
-                placeholder="Ex: PETR4, AAPL, BTC-USD..."/>
-              <button onClick={buscar} disabled={loading}
-                style={{...S.btnV,padding:"9px 24px",fontSize:14,opacity:loading?0.6:1}}>
-                {loading?"⏳":"🔍 Buscar"}
-              </button>
-            </div>
-          </div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
+          {TIPOS.map(t=>(
+            <button key={t.id} onClick={()=>setTipo(t.id)}
+              style={tipo===t.id?S.btnV:{...S.btnO,fontSize:11,padding:"6px 12px"}}>
+              {t.label}
+            </button>
+          ))}
         </div>
-        {erro && <div style={{marginTop:10,color:C.red,fontSize:12}}>{erro}</div>}
+        <div style={{display:"flex",gap:8}}>
+          <input style={{...S.inp,flex:1,fontSize:16,fontWeight:700,textTransform:"uppercase",letterSpacing:1}}
+            value={input} onChange={e=>setInput(e.target.value.toUpperCase())}
+            onKeyDown={e=>e.key==="Enter"&&buscar()}
+            placeholder={"Ex: "+TIPOS.find(t=>t.id===tipo)?.ex}/>
+          <button onClick={buscar} disabled={loading}
+            style={{...S.btnV,padding:"10px 28px",fontSize:14,opacity:loading?0.6:1,minWidth:120}}>
+            {loading?"⏳ Buscando...":"🔍 Buscar"}
+          </button>
+        </div>
+        {erro&&<div style={{marginTop:8,color:C.red,fontSize:12,lineHeight:1.5}}>{erro}</div>}
       </div>
 
-      {loading && (
-        <div style={{...S.card,textAlign:"center",padding:40}}>
-          <div style={{fontSize:20,marginBottom:8}}>⏳</div>
-          <div style={{color:C.muted}}>Buscando dados de {input}...</div>
+      {/* Empty state */}
+      {!data&&!loading&&!erro&&(
+        <div style={{...S.card,textAlign:"center",padding:48}}>
+          <div style={{fontSize:44,marginBottom:12}}>🔬</div>
+          <div style={{fontSize:16,fontWeight:700,color:C.text,marginBottom:8}}>Pesquise qualquer ativo</div>
+          <div style={{fontSize:13,color:C.muted,lineHeight:2}}>
+            <span style={{color:C.accent,fontWeight:700}}>Ações BR:</span> PETR4, VALE3, ITUB4, BBDC4, WEGE3<br/>
+            <span style={{color:C.accent,fontWeight:700}}>Ações EUA:</span> AAPL, MSFT, NVDA, GOOGL, AMZN<br/>
+            <span style={{color:C.accent,fontWeight:700}}>ETFs:</span> SPY, QQQ, VTI, BOVA11, IVVB11<br/>
+            <span style={{color:C.accent,fontWeight:700}}>Cripto:</span> BTC-USD, ETH-USD, SOL-USD<br/>
+            <span style={{color:C.accent,fontWeight:700}}>FIIs:</span> HGLG11, XPML11, KNRI11
+          </div>
         </div>
       )}
 
-      {data && !loading && (
+      {data&&!loading&&(
         <>
-          {/* Header do ativo */}
-          <div style={{...S.cardGlow(changColor),padding:20}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
+          {/* Header */}
+          <div style={{...S.cardGlow(chgC),padding:20}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12,marginBottom:16}}>
               <div>
-                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
-                  <div style={{fontSize:28,fontWeight:800,fontFamily:"'Syne',sans-serif",color:C.accent}}>{data.ticker}</div>
-                  {data.sector && <span style={{...S.badge(C.blue),fontSize:10}}>{data.sector}</span>}
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4,flexWrap:"wrap"}}>
+                  <span style={{fontSize:26,fontWeight:800,fontFamily:"'Syne',sans-serif",color:C.accent}}>{data.ticker}</span>
+                  {data.sector&&<span style={{...S.badge(C.blue),fontSize:10}}>{data.sector}</span>}
+                  {data.industry&&<span style={{...S.badge(C.muted),fontSize:9}}>{data.industry}</span>}
                 </div>
-                <div style={{fontSize:14,color:C.textSub,marginBottom:8}}>{data.nome}</div>
-                <div style={{display:"flex",alignItems:"baseline",gap:12}}>
-                  <div style={{fontSize:36,fontWeight:800,fontFamily:"'Syne',sans-serif",color:C.text}}>
-                    {data.moeda==="BRL"?"R$":"$"}{data.preco?.toFixed(2)}
-                  </div>
-                  <div style={{fontSize:16,fontWeight:700,color:changColor}}>
-                    {data.changePct>=0?"▲":"▼"} {Math.abs(data.changePct).toFixed(2)}%
-                    <span style={{fontSize:12,marginLeft:6}}>({data.changePct>=0?"+":""}{data.changeAbs?.toFixed(2)})</span>
-                  </div>
+                <div style={{fontSize:14,color:C.textSub,marginBottom:10}}>{data.nome}</div>
+                <div style={{display:"flex",alignItems:"baseline",gap:10,flexWrap:"wrap"}}>
+                  <span style={{fontSize:34,fontWeight:800,fontFamily:"'Syne',sans-serif",color:C.text}}>{curr}{data.preco?.toFixed(2)}</span>
+                  <span style={{fontSize:16,fontWeight:700,color:chgC}}>{data.changePct>=0?"▲":"▼"} {Math.abs(data.changePct||0).toFixed(2)}% ({data.changePct>=0?"+":""}{(data.changeAbs||0).toFixed(2)})</span>
                 </div>
               </div>
-              <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
-                <button onClick={addToPortfolio} style={{...S.btnV,fontSize:12,padding:"8px 16px"}}>
-                  + Adicionar ao Portfólio
-                </button>
+              <div style={{display:"flex",flexDirection:"column",gap:8,alignItems:"flex-end"}}>
+                <button onClick={addToPortfolio} style={{...S.btnV,fontSize:12,padding:"8px 18px"}}>+ Portfólio</button>
+                <div style={{fontSize:11,color:C.muted}}>Mkt Cap: <b style={{color:C.text}}>{fVal(data.mktcap)}</b></div>
+                <div style={{...S.badge(data.compositeScore>=70?C.accent:data.compositeScore>=50?C.gold:C.red),fontSize:11}}>
+                  {data.recommendation}
+                </div>
               </div>
             </div>
-
-            {/* Quick stats row */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(100px,1fr))",gap:8,marginTop:16}}>
+            {/* Quick grid */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(90px,1fr))",gap:6}}>
               {[
-                {label:"Abertura",val:(data.moeda==="BRL"?"R$":"$")+data.open?.toFixed(2)},
-                {label:"Máx. Dia",val:(data.moeda==="BRL"?"R$":"$")+data.high?.toFixed(2)},
-                {label:"Mín. Dia",val:(data.moeda==="BRL"?"R$":"$")+data.low?.toFixed(2)},
-                {label:"Fecham. Ant.",val:(data.moeda==="BRL"?"R$":"$")+data.prev?.toFixed(2)},
-                {label:"Volume",val:data.vol>1e6?(data.vol/1e6).toFixed(1)+"M":data.vol>1e3?(data.vol/1e3).toFixed(0)+"K":data.vol?.toFixed(0)},
-                {label:"Mkt Cap",val:fmtM(data.mktcap)},
+                {l:"Abertura",v:curr+data.open?.toFixed(2)},
+                {l:"Máx Dia",v:curr+data.high?.toFixed(2)},
+                {l:"Mín Dia",v:curr+data.low?.toFixed(2)},
+                {l:"Prev. Fech.",v:curr+data.prev?.toFixed(2)},
+                {l:"Volume",v:data.vol>1e6?(data.vol/1e6).toFixed(1)+"M":data.vol>1e3?(data.vol/1e3).toFixed(0)+"K":(data.vol||0).toString()},
+                {l:"Vol Médio",v:data.avgVol20d?(data.avgVol20d/1e6).toFixed(1)+"M":"—"},
               ].map(k=>(
-                <div key={k.label} style={{background:C.surface,borderRadius:8,padding:"8px 10px"}}>
-                  <div style={{fontSize:9,color:C.muted,textTransform:"uppercase",letterSpacing:.5}}>{k.label}</div>
-                  <div style={{fontSize:13,fontWeight:700,color:C.text,marginTop:2}}>{k.val||"—"}</div>
+                <div key={k.l} style={{background:C.surface,borderRadius:8,padding:"6px 8px",textAlign:"center"}}>
+                  <div style={{fontSize:8,color:C.muted,textTransform:"uppercase",letterSpacing:.5}}>{k.l}</div>
+                  <div style={{fontSize:12,fontWeight:700,color:C.text,marginTop:2}}>{k.v||"—"}</div>
                 </div>
               ))}
             </div>
-
-            {/* 52W range */}
-            {data.high52w && data.low52w && (
-              <div style={{marginTop:14}}>
-                <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:C.muted,marginBottom:4}}>
-                  <span>Mín. 52s: {data.moeda==="BRL"?"R$":"$"}{data.low52w?.toFixed(2)}</span>
-                  <span>Posição 52s: <b style={{color:pct52w>70?C.accent:pct52w>40?C.gold:C.red}}>{pct52w}%</b></span>
-                  <span>Máx. 52s: {data.moeda==="BRL"?"R$":"$"}{data.high52w?.toFixed(2)}</span>
+            {/* 52W bar */}
+            {data.high52w&&data.low52w&&(
+              <div style={{marginTop:12}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.muted,marginBottom:3}}>
+                  <span>Mín 52s: {curr}{data.low52w?.toFixed(2)}</span>
+                  <span style={{color:pct52w>60?C.accent:pct52w>35?C.gold:C.red,fontWeight:700}}>{pct52w}% do range</span>
+                  <span>Máx 52s: {curr}{data.high52w?.toFixed(2)}</span>
                 </div>
-                <div style={{background:C.border,borderRadius:4,height:6,position:"relative"}}>
+                <div style={{background:C.border,borderRadius:4,height:5,position:"relative",overflow:"hidden"}}>
                   <div style={{position:"absolute",left:0,width:(pct52w||0)+"%",height:"100%",background:"linear-gradient(90deg,"+C.red+","+C.gold+","+C.accent+")",borderRadius:4}}/>
-                  <div style={{position:"absolute",left:(pct52w||0)+"%",top:-3,width:12,height:12,borderRadius:"50%",background:C.text,border:"2px solid "+C.bg,transform:"translateX(-50%)"}}/>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Navigation tabs */}
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {/* Tab navigation */}
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
             {ABAS_RES.map(a=>(
               <button key={a.id} onClick={()=>setAba(a.id)}
-                style={aba===a.id?S.btnV:{...S.btnO,fontSize:12,padding:"7px 14px"}}>
+                style={aba===a.id?S.btnV:{...S.btnO,fontSize:11,padding:"6px 13px"}}>
                 {a.label}
               </button>
             ))}
           </div>
 
-          {/* ── OVERVIEW ── */}
-          {aba==="overview" && (
+          {/* ══ OVERVIEW ══ */}
+          {aba==="overview"&&(
             <div style={{display:"flex",flexDirection:"column",gap:12}}>
-              {/* Price chart */}
-              {data.hist?.length > 1 && (
+              {data.hist?.length>1&&(
                 <div style={S.card}>
-                  <div style={{fontSize:12,color:C.muted,marginBottom:8}}>Histórico de Preços — 90 dias</div>
+                  <div style={{fontSize:11,color:C.muted,marginBottom:8}}>Histórico de Preços — {data.hist.length} dias</div>
                   <ResponsiveContainer width="100%" height={200}>
                     <AreaChart data={data.hist}>
-                      <XAxis dataKey="date" stroke={C.muted} tick={{fontSize:9}} interval={Math.floor(data.hist.length/6)}/>
-                      <YAxis stroke={C.muted} tick={{fontSize:9}} domain={["auto","auto"]}/>
-                      <RechartsTip contentStyle={S.TT} formatter={v=>[(data.moeda==="BRL"?"R$":"$")+v?.toFixed(2),"Preço"]}/>
-                      <Area type="monotone" dataKey="close" stroke={changColor} fill={changColor+"22"} strokeWidth={2} dot={false}/>
+                      <XAxis dataKey="date" stroke={C.muted} tick={{fontSize:8}} interval={Math.floor(data.hist.length/6)}/>
+                      <YAxis stroke={C.muted} tick={{fontSize:8}} domain={["auto","auto"]} tickFormatter={v=>curr+v.toFixed(0)}/>
+                      <RechartsTip contentStyle={S.TT} formatter={v=>[curr+v.toFixed(2),"Preço"]}/>
+                      <Area type="monotone" dataKey="close" stroke={chgC} fill={chgC+"22"} strokeWidth={2} dot={false}/>
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
               )}
-              {/* Returns */}
-              {(data.returnYTD||data.return1Y||data.return3Y||data.return5Y) && (
-                <div style={S.card}>
-                  <div style={{fontSize:12,color:C.muted,marginBottom:10}}>Retornos por Período</div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
-                    {[
-                      {label:"YTD",val:data.returnYTD},
-                      {label:"1 Ano",val:data.return1Y},
-                      {label:"3 Anos",val:data.return3Y},
-                      {label:"5 Anos",val:data.return5Y},
-                    ].map(k=>(
-                      <div key={k.label} style={{background:C.surface,borderRadius:10,padding:"12px",textAlign:"center"}}>
-                        <div style={{fontSize:10,color:C.muted,textTransform:"uppercase"}}>{k.label}</div>
-                        <div style={{fontSize:18,fontWeight:800,color:k.val>=0?C.accent:C.red,fontFamily:"'Syne',sans-serif"}}>
-                          {k.val!=null?fmt2(k.val,1,"%"):"—"}
-                        </div>
-                      </div>
-                    ))}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10}}>
+                {[
+                  {l:"Retorno 1M",v:f2(data.ret1m,1,"%"),c:data.ret1m>=0?C.accent:C.red},
+                  {l:"Retorno 3M",v:f2(data.ret3m,1,"%"),c:data.ret3m>=0?C.accent:C.red},
+                  {l:"Retorno 6M",v:f2(data.ret6m,1,"%"),c:data.ret6m>=0?C.accent:C.red},
+                  {l:"Retorno 1A",v:f2(data.ret1y,1,"%"),c:data.ret1y>=0?C.accent:C.red},
+                  {l:"Volatilidade",v:f2(data.volatility,1,"%"),c:data.volatility>40?C.red:data.volatility>20?C.gold:C.accent},
+                  {l:"Score Composto",v:data.compositeScore+"/100",c:data.compositeScore>=70?C.accent:data.compositeScore>=50?C.gold:C.red},
+                ].map(k=>(
+                  <div key={k.l} style={{background:C.surface,borderRadius:10,padding:"12px 14px",textAlign:"center"}}>
+                    <div style={{fontSize:9,color:C.muted,textTransform:"uppercase",letterSpacing:.5}}>{k.l}</div>
+                    <div style={{fontSize:20,fontWeight:800,color:k.c,fontFamily:"'Syne',sans-serif",marginTop:4}}>{k.v}</div>
                   </div>
-                </div>
-              )}
-              {/* Desc */}
-              {data.desc && (
+                ))}
+              </div>
+              {data.desc&&(
                 <div style={S.card}>
-                  <div style={{fontSize:12,color:C.muted,marginBottom:8}}>Sobre a Empresa</div>
-                  <div style={{fontSize:12,color:C.textSub,lineHeight:1.8}}>{data.desc.slice(0,500)}{data.desc.length>500?"...":""}</div>
+                  <div style={{fontSize:11,color:C.muted,marginBottom:6}}>Sobre a Empresa</div>
+                  <div style={{fontSize:12,color:C.textSub,lineHeight:1.8}}>{data.desc.slice(0,600)}{data.desc.length>600?"...":""}</div>
+                  {data.employees&&<div style={{fontSize:11,color:C.muted,marginTop:8}}>👥 {data.employees.toLocaleString("pt-BR")} funcionários</div>}
                 </div>
               )}
             </div>
           )}
 
-          {/* ── FUNDAMENTOS ── */}
-          {aba==="fundamentos" && (
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+          {/* ══ VALUATION ══ */}
+          {aba==="valuation"&&(
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
               <div style={S.card}>
-                <div style={{fontSize:12,fontWeight:700,color:C.accent,marginBottom:12}}>📊 Valuation</div>
+                <div style={{fontSize:12,fontWeight:700,color:C.accent,marginBottom:10}}>💰 Múltiplos de Preço</div>
+                <MRow label="P/L Trailing" val={f2(data.pe,1,"x")} bom="<15x" ruim=">30x" desc="Preço / Lucro últimos 12 meses"/>
+                <MRow label="P/L Forward" val={f2(data.peForward,1,"x")} bom="<12x" ruim=">25x" desc="Preço / Lucro estimado próximos 12m"/>
+                <MRow label="PEG Ratio" val={f2(data.pegRatio,2,"x")} bom="<1x" ruim=">2x" desc="P/L dividido pelo crescimento do EPS" cor={data.pegRatio&&data.pegRatio<1?C.accent:data.pegRatio&&data.pegRatio>2?C.red:C.text}/>
+                <MRow label="P/VP (P/B)" val={f2(data.pb,2,"x")} bom="<1.5x" ruim=">4x" desc="Preço / Valor Patrimonial"/>
+                <MRow label="P/Receita (P/S)" val={f2(data.ps,2,"x")} bom="<2x" ruim=">10x" desc="Preço / Receita anual"/>
+                <MRow label="EV/EBITDA" val={f2(data.evEbitda,1,"x")} bom="<8x" ruim=">20x" desc="Enterprise Value / EBITDA"/>
+                <MRow label="FCF Yield" val={f2(data.fcfYield,1,"%")} bom=">5%" ruim="<1%" desc="Free Cash Flow / Mkt Cap estimado"/>
+                <MRow label="Graham Number" val={data.grahamNumber?curr+data.grahamNumber:"—"} desc="Valor intrínseco de Graham. Preço atual vs Graham."/>
+                <MRow label="EPS Trailing" val={data.eps?curr+f2(data.eps,2):"—"} desc="Lucro por ação — últimos 12 meses"/>
+                <MRow label="EPS Forward" val={data.epsForward?curr+f2(data.epsForward,2):"—"} desc="Lucro por ação estimado — próximos 12m"/>
+              </div>
+              <div style={S.card}>
+                <div style={{fontSize:12,fontWeight:700,color:C.blue,marginBottom:10}}>🏢 Empresa & Balanço</div>
+                <MRow label="Market Cap" val={fVal(data.mktcap)} desc="Capitalização de mercado total"/>
+                <MRow label="EBITDA" val={fVal(data.ebitda)} desc="Lucro antes de juros, impostos, depreciação e amortização"/>
+                <MRow label="Dívida Total" val={fVal(data.dividaLiquida)} desc="Dívida total da empresa"/>
+                <MRow label="Caixa" val={fVal(data.caixa)} desc="Posição de caixa e equivalentes"/>
+                <MRow label="Dívida Líq./EBITDA" val={f2(data.netDebtEbitda,2,"x")} bom="<2x" ruim=">4x" desc="Alavancagem. Quantos anos de EBITDA para pagar a dívida."/>
+                <MRow label="Cobertura de Juros" val={f2(data.interestCoverage,1,"x")} bom=">5x" ruim="<2x" desc="EBITDA / Juros anuais estimados"/>
+                <MRow label="Current Ratio" val={f2(data.currentRatio,2,"x")} bom=">1.5x" ruim="<1x" desc="Ativo circulante / Passivo circulante"/>
+                <MRow label="Dívida/PL" val={f2(data.debtEquity,2,"x")} bom="<0.5x" ruim=">2x" desc="Alavancagem financeira total"/>
+                <MRow label="Dividend Yield" val={f2(data.dy,2,"%")} bom=">3%" ruim="<1%" desc="Retorno em dividendos sobre o preço" cor={data.dy>4?C.accent:data.dy>2?C.gold:C.muted}/>
+              </div>
+            </div>
+          )}
+
+          {/* ══ QUALIDADE ══ */}
+          {aba==="qualidade"&&(
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+              <div style={S.card}>
+                <div style={{fontSize:12,fontWeight:700,color:C.accent,marginBottom:10}}>📊 Rentabilidade</div>
+                <MRow label="ROE" val={f2(data.roe!=null?data.roe*100:null,1,"%")} bom=">15%" ruim="<5%" desc="Retorno sobre Patrimônio Líquido" cor={data.roe>0.15?C.accent:data.roe>0.05?C.gold:C.red}/>
+                <MRow label="ROA" val={f2(data.roa!=null?data.roa*100:null,1,"%")} bom=">8%" ruim="<2%" desc="Retorno sobre Ativos Totais"/>
+                <MRow label="Margem Líquida" val={f2(data.margemLiquida!=null?data.margemLiquida*100:null,1,"%")} bom=">15%" ruim="<5%" desc="Lucro líquido como % da receita"/>
+                <MRow label="Margem Bruta" val={f2(data.margemBruta!=null?data.margemBruta*100:null,1,"%")} bom=">40%" ruim="<20%" desc="Receita bruta menos custo dos produtos"/>
+                <MRow label="Margem EBITDA" val={f2(data.margemEbitda!=null?data.margemEbitda*100:null,1,"%")} bom=">25%" ruim="<10%" desc="EBITDA como % da receita total"/>
+              </div>
+              <div style={S.card}>
+                <div style={{fontSize:12,fontWeight:700,color:C.gold,marginBottom:10}}>🏆 Scores de Qualidade</div>
                 {[
-                  {label:"P/L (Trailing)",val:fmt2(data.pe,1,"x"),desc:"Preço/Lucro. Abaixo de 15x = barato. Acima de 25x = caro.",bom:"< 15x",ruim:"> 30x"},
-                  {label:"P/VP",val:fmt2(data.pb,2,"x"),desc:"Preço/Valor Patrimonial. Abaixo de 1x pode indicar desconto.",bom:"< 1.5x",ruim:"> 4x"},
-                  {label:"P/S",val:fmt2(data.ps,2,"x"),desc:"Preço/Receita. Útil para empresas sem lucro.",bom:"< 2x",ruim:"> 10x"},
-                  {label:"EV/EBITDA",val:fmt2(data.evEbitda,1,"x"),desc:"Enterprise Value / EBITDA. Métrica de aquisição.",bom:"< 8x",ruim:"> 20x"},
-                  {label:"Dividend Yield",val:fmt2(data.dy,2,"%"),desc:"Retorno em dividendos sobre o preço atual.",bom:"> 4%",ruim:"< 1%"},
-                  {label:"EPS",val:fmt2(data.eps,2),desc:"Lucro por ação (trailing 12 meses).",bom:"Crescendo",ruim:"Negativo"},
+                  {label:"F-Score Piotroski",val:data.fScore+"/9",max:9,v:data.fScore,cor:data.fScore>=7?C.accent:data.fScore>=5?C.gold:C.red,
+                   desc:"Qualidade do balanço (0-9). Acima de 7 = forte. Abaixo de 3 = fraco."},
+                  {label:"Altman Z-Score",val:f2(data.zScore,2),max:null,v:null,cor:data.zScore>2.99?C.accent:data.zScore>1.81?C.gold:C.red,
+                   desc:"Risco de falência. >2.99 = seguro. 1.81-2.99 = atenção. <1.81 = risco."},
+                  {label:"Quality Score",val:(data.qualityScore||0)+"/100",max:100,v:data.qualityScore,cor:data.qualityScore>=70?C.accent:data.qualityScore>=50?C.gold:C.red,
+                   desc:"Score proprietário de qualidade baseado em múltiplas métricas."},
                 ].map(m=>(
-                  <div key={m.label} style={{padding:"8px 0",borderBottom:"1px solid "+C.border+"44"}}>
-                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
+                  <div key={m.label} style={{marginBottom:14}}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                       <span style={{fontSize:12,color:C.textSub}}>{m.label}</span>
-                      <span style={{fontSize:13,fontWeight:700,color:C.text}}>{m.val}</span>
+                      <span style={{fontSize:14,fontWeight:800,color:m.cor}}>{m.val}</span>
                     </div>
+                    {m.max&&<div style={{background:C.border,borderRadius:4,height:6,marginBottom:4}}><div style={{width:(m.v/m.max*100)+"%",height:"100%",background:m.cor,borderRadius:4}}/></div>}
                     <div style={{fontSize:10,color:C.muted}}>{m.desc}</div>
                   </div>
                 ))}
               </div>
-              <div style={S.card}>
-                <div style={{fontSize:12,fontWeight:700,color:C.blue,marginBottom:12}}>💼 Qualidade & Crescimento</div>
-                {[
-                  {label:"ROE",val:fmt2(data.roe!=null?data.roe*100:null,1,"%"),desc:"Retorno sobre Patrimônio. Acima de 15% é bom.",bom:"> 15%",ruim:"< 5%"},
-                  {label:"ROA",val:fmt2(data.roa!=null?data.roa*100:null,1,"%"),desc:"Retorno sobre Ativos.",bom:"> 8%",ruim:"< 2%"},
-                  {label:"Margem Líquida",val:fmt2(data.margemLiquida!=null?data.margemLiquida*100:null,1,"%"),desc:"Lucro líquido como % da receita.",bom:"> 15%",ruim:"< 5%"},
-                  {label:"Margem Bruta",val:fmt2(data.margemBruta!=null?data.margemBruta*100:null,1,"%"),desc:"Receita bruta menos CPV.",bom:"> 40%",ruim:"< 20%"},
-                  {label:"Margem EBITDA",val:fmt2(data.margemEbitda!=null?data.margemEbitda*100:null,1,"%"),desc:"EBITDA como % da receita.",bom:"> 25%",ruim:"< 10%"},
-                  {label:"Cresc. Receita 3A",val:fmt2(data.revenueGrowth,1,"%"),desc:"Crescimento anual composto da receita.",bom:"> 10%",ruim:"< 0%"},
-                  {label:"Cresc. EPS 3A",val:fmt2(data.epsGrowth,1,"%"),desc:"Crescimento anual composto do lucro por ação.",bom:"> 10%",ruim:"< 0%"},
-                  {label:"Current Ratio",val:fmt2(data.currentRatio,2,"x"),desc:"Liquidez corrente. Acima de 1.5x = saudável.",bom:"> 1.5x",ruim:"< 1x"},
-                  {label:"Dívida/PL",val:fmt2(data.debtEquity,2,"x"),desc:"Alavancagem financeira. Abaixo de 1x = conservador.",bom:"< 0.5x",ruim:"> 2x"},
-                ].map(m=>(
-                  <div key={m.label} style={{padding:"7px 0",borderBottom:"1px solid "+C.border+"44"}}>
-                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
-                      <span style={{fontSize:12,color:C.textSub}}>{m.label}</span>
-                      <span style={{fontSize:13,fontWeight:700,color:C.text}}>{m.val}</span>
-                    </div>
-                    <div style={{fontSize:10,color:C.muted}}>{m.desc} <span style={{color:C.accent}}>Bom: {m.bom}</span> · <span style={{color:C.red}}>Ruim: {m.ruim}</span></div>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 
-          {/* ── TÉCNICA ── */}
-          {aba==="tecnica" && (
-            <div style={{display:"flex",flexDirection:"column",gap:12}}>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:12}}>
+          {/* ══ CRESCIMENTO ══ */}
+          {aba==="crescimento"&&(
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10}}>
                 {[
-                  {label:"RSI (14)",val:data.rsi!=null?data.rsi.toFixed(1):"—",cor:rsiColor,
-                   desc:data.rsi>70?"Sobrecomprado — possível correção":data.rsi<30?"Sobrevendido — possível recuperação":"Zona neutra"},
-                  {label:"SMA 20",val:data.sma20!=null?(data.moeda==="BRL"?"R$":"$")+data.sma20.toFixed(2):"—",
-                   cor:data.preco>data.sma20?C.accent:C.red,
-                   desc:data.preco>data.sma20?"Preço acima da SMA20 — tendência de alta":"Preço abaixo da SMA20 — tendência de baixa"},
-                  {label:"SMA 50",val:data.sma50!=null?(data.moeda==="BRL"?"R$":"$")+data.sma50.toFixed(2):"—",
-                   cor:data.preco>data.sma50?C.accent:C.red,
-                   desc:data.preco>data.sma50?"Preço acima da SMA50 — tendência de médio prazo positiva":"Abaixo da SMA50 — tendência de médio prazo negativa"},
-                  {label:"Posição 52s",val:pct52w!=null?pct52w+"%":"—",
-                   cor:pct52w>70?C.accent:pct52w>40?C.gold:C.red,
-                   desc:pct52w>70?"Próximo à máxima de 52 semanas — força":pct52w>40?"No meio do range anual":"Próximo à mínima de 52 semanas"},
-                  {label:"Volatilidade",val:data.volatility!=null?fmt2(data.volatility,1,"%"):"—",
-                   cor:data.volatility>40?C.red:data.volatility>20?C.gold:C.accent,
-                   desc:"Volatilidade anualizada histórica"},
-                  {label:"Volume Médio",val:data.avgVol20d!=null?(data.avgVol20d/1e6).toFixed(1)+"M":"—",
-                   cor:C.text,desc:"Volume médio dos últimos 20 dias"},
-                ].map(m=>(
-                  <div key={m.label} style={{...S.card,textAlign:"center",padding:"14px 16px",borderTop:"3px solid "+m.cor}}>
-                    <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:.5}}>{m.label}</div>
-                    <div style={{fontSize:22,fontWeight:800,color:m.cor,fontFamily:"'Syne',sans-serif",margin:"6px 0"}}>{m.val}</div>
-                    <div style={{fontSize:10,color:C.textSub,lineHeight:1.5}}>{m.desc}</div>
+                  {l:"Crescimento Receita",v:f2(data.revenueGrowth,1,"%"),c:data.revenueGrowth>0?C.accent:C.red},
+                  {l:"Crescimento EPS",v:f2(data.epsGrowth,1,"%"),c:data.epsGrowth>0?C.accent:C.red},
+                  {l:"Retorno 1M",v:f2(data.ret1m,1,"%"),c:data.ret1m>=0?C.accent:C.red},
+                  {l:"Retorno 3M",v:f2(data.ret3m,1,"%"),c:data.ret3m>=0?C.accent:C.red},
+                  {l:"Retorno 6M",v:f2(data.ret6m,1,"%"),c:data.ret6m>=0?C.accent:C.red},
+                  {l:"Retorno 1A",v:f2(data.ret1y,1,"%"),c:data.ret1y>=0?C.accent:C.red},
+                ].map(k=>(
+                  <div key={k.l} style={{background:C.surface,borderRadius:10,padding:"14px",textAlign:"center",borderTop:"3px solid "+k.c}}>
+                    <div style={{fontSize:9,color:C.muted,textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>{k.l}</div>
+                    <div style={{fontSize:22,fontWeight:800,color:k.c,fontFamily:"'Syne',sans-serif"}}>{k.v}</div>
                   </div>
                 ))}
               </div>
-              {data.hist?.length > 1 && (
+              {data.hist?.length>1&&(
                 <div style={S.card}>
-                  <div style={{fontSize:11,color:C.muted,marginBottom:8}}>Preço + Médias Móveis (SMA20 e SMA50)</div>
+                  <div style={{fontSize:11,color:C.muted,marginBottom:8}}>Retornos acumulados por período</div>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <BarChart data={[
+                      {periodo:"1M",ret:data.ret1m||0},
+                      {periodo:"3M",ret:data.ret3m||0},
+                      {periodo:"6M",ret:data.ret6m||0},
+                      {periodo:"1A",ret:data.ret1y||0},
+                    ]}>
+                      <XAxis dataKey="periodo" stroke={C.muted} tick={{fontSize:11}}/>
+                      <YAxis stroke={C.muted} tick={{fontSize:9}} tickFormatter={v=>v+"%"}/>
+                      <RechartsTip contentStyle={S.TT} formatter={v=>[v.toFixed(1)+"%","Retorno"]}/>
+                      <Bar dataKey="ret" radius={[6,6,0,0]}>
+                        {[data.ret1m,data.ret3m,data.ret6m,data.ret1y].map((v,i)=>(
+                          <Cell key={i} fill={(v||0)>=0?C.accent:C.red}/>
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ══ TÉCNICA ══ */}
+          {aba==="tecnica"&&(
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10}}>
+                {[
+                  {l:"RSI (14)",v:data.rsi!=null?data.rsi.toFixed(1):"—",c:data.rsi>70?C.red:data.rsi<30?C.accent:C.gold,
+                   d:data.rsi>70?"Sobrecomprado":data.rsi<30?"Sobrevendido":"Neutro"},
+                  {l:"SMA 20",v:data.sma20?curr+data.sma20.toFixed(2):"—",c:data.preco>data.sma20?C.accent:C.red,
+                   d:data.preco>data.sma20?"Acima ▲":"Abaixo ▼"},
+                  {l:"SMA 50",v:data.sma50?curr+data.sma50.toFixed(2):"—",c:data.preco>data.sma50?C.accent:C.red,
+                   d:data.preco>data.sma50?"Acima ▲":"Abaixo ▼"},
+                  {l:"SMA 200",v:data.sma200?curr+data.sma200.toFixed(2):"—",c:data.preco>data.sma200?C.accent:C.red,
+                   d:data.preco>data.sma200?"Bull trend":"Bear trend"},
+                  {l:"EMA 20",v:data.ema20?curr+data.ema20.toFixed(2):"—",c:data.preco>data.ema20?C.accent:C.red,d:""},
+                  {l:"MACD",v:data.macd!=null?data.macd.toFixed(3):"—",c:data.macd>0?C.accent:C.red,
+                   d:data.macd>0?"Momentum positivo":"Momentum negativo"},
+                  {l:"BB Superior",v:data.bbUpper?curr+data.bbUpper:"—",c:C.muted,d:"Banda superior 2σ"},
+                  {l:"BB Inferior",v:data.bbLower?curr+data.bbLower:"—",c:C.muted,d:"Banda inferior 2σ"},
+                  {l:"ATR (14)",v:data.atr?curr+data.atr:"—",c:C.text,d:"Average True Range"},
+                  {l:"Volatilidade",v:f2(data.volatility,1,"%"),c:data.volatility>40?C.red:data.volatility>20?C.gold:C.accent,d:"Anualizada"},
+                  {l:"Pos. no Range",v:pct52w!=null?pct52w+"%":"—",c:pct52w>70?C.accent:pct52w>35?C.gold:C.red,d:"Posição no range 52 semanas"},
+                ].map(k=>(
+                  <div key={k.l} style={{background:C.surface,borderRadius:10,padding:"12px 14px",borderTop:"3px solid "+k.c}}>
+                    <div style={{fontSize:9,color:C.muted,textTransform:"uppercase",letterSpacing:.5}}>{k.l}</div>
+                    <div style={{fontSize:17,fontWeight:800,color:k.c,fontFamily:"'Syne',sans-serif",margin:"5px 0 2px"}}>{k.v}</div>
+                    <div style={{fontSize:9,color:C.muted}}>{k.d}</div>
+                  </div>
+                ))}
+              </div>
+              {data.hist?.length>1&&(
+                <div style={S.card}>
+                  <div style={{fontSize:11,color:C.muted,marginBottom:8}}>Preço + SMA20 + SMA50</div>
                   <ResponsiveContainer width="100%" height={220}>
                     <ComposedChart data={data.hist.map((h,i,a)=>({
                       ...h,
-                      sma20: a.length>=20&&i>=19?(a.slice(i-19,i+1).reduce((s,v)=>s+v.close,0)/20).toFixed(2):null,
-                      sma50: a.length>=50&&i>=49?(a.slice(i-49,i+1).reduce((s,v)=>s+v.close,0)/50).toFixed(2):null,
+                      sma20:a.length>=20&&i>=19?(a.slice(i-19,i+1).reduce((s,v)=>s+v.close,0)/20).toFixed(2):null,
+                      sma50:a.length>=50&&i>=49?(a.slice(i-49,i+1).reduce((s,v)=>s+v.close,0)/50).toFixed(2):null,
                     }))}>
-                      <XAxis dataKey="date" stroke={C.muted} tick={{fontSize:9}} interval={Math.floor(data.hist.length/6)}/>
-                      <YAxis stroke={C.muted} tick={{fontSize:9}} domain={["auto","auto"]}/>
+                      <XAxis dataKey="date" stroke={C.muted} tick={{fontSize:8}} interval={Math.floor(data.hist.length/6)}/>
+                      <YAxis stroke={C.muted} tick={{fontSize:8}} domain={["auto","auto"]} tickFormatter={v=>curr+v}/>
                       <RechartsTip contentStyle={S.TT}/>
-                      <Area type="monotone" dataKey="close" stroke={changColor} fill={changColor+"15"} strokeWidth={2} dot={false} name="Preço"/>
+                      <Area type="monotone" dataKey="close" stroke={chgC} fill={chgC+"15"} strokeWidth={2} dot={false} name="Preço"/>
                       <Line type="monotone" dataKey="sma20" stroke={C.gold} strokeWidth={1.5} dot={false} name="SMA20"/>
                       <Line type="monotone" dataKey="sma50" stroke={C.blue} strokeWidth={1.5} dot={false} name="SMA50"/>
                       <Legend/>
@@ -6192,120 +6348,96 @@ function TabResearch({ assets=[], setAssets, quotes={} }) {
             </div>
           )}
 
-          {/* ── RISCO ── */}
-          {aba==="risco" && (
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+          {/* ══ RISCO ══ */}
+          {aba==="risco"&&(
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
               <div style={S.card}>
-                <div style={{fontSize:12,fontWeight:700,color:C.red,marginBottom:12}}>⚠ Métricas de Risco</div>
-                {[
-                  {label:"Beta",val:fmt2(data.betaFund,2),desc:"Sensibilidade vs mercado. 1.0 = move junto.",bom:"0.6–0.8",ruim:"> 1.5"},
-                  {label:"Volatilidade Anual",val:fmt2(data.volatility,1,"%"),desc:"Desvio padrão anualizado dos retornos.",bom:"< 15%",ruim:"> 40%"},
-                  {label:"Máx. 52s",val:(data.moeda==="BRL"?"R$":"$")+fmt2(data.high52w,2),desc:"Máxima dos últimos 52 semanas.",bom:"—",ruim:"—"},
-                  {label:"Mín. 52s",val:(data.moeda==="BRL"?"R$":"$")+fmt2(data.low52w,2),desc:"Mínima dos últimos 52 semanas.",bom:"—",ruim:"—"},
-                  {label:"Queda da Máx.",val:data.high52w&&data.preco?fmt2((data.preco-data.high52w)/data.high52w*100,1,"%"):"—",desc:"Drawdown da máxima de 52 semanas.",bom:"< -5%",ruim:"< -30%"},
-                ].map(m=>(
-                  <div key={m.label} style={{padding:"8px 0",borderBottom:"1px solid "+C.border+"44"}}>
-                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
-                      <span style={{fontSize:12,color:C.textSub}}>{m.label}</span>
-                      <span style={{fontSize:13,fontWeight:700,color:C.text}}>{m.val}</span>
-                    </div>
-                    <div style={{fontSize:10,color:C.muted}}>{m.desc}</div>
-                  </div>
-                ))}
+                <div style={{fontSize:12,fontWeight:700,color:C.red,marginBottom:10}}>⚠ Métricas de Risco</div>
+                <MRow label="Beta" val={f2(data.betaFund,2)} bom="0.6–0.9" ruim=">1.5" desc="Sensibilidade vs mercado" cor={Math.abs(data.betaFund-1)<0.3?C.accent:data.betaFund>1.5?C.red:C.gold}/>
+                <MRow label="Volatilidade Anual" val={f2(data.volatility,1,"%")} bom="<15%" ruim=">40%" desc="Desvio padrão anualizado dos retornos"/>
+                <MRow label="Queda da Máx. 52s" val={data.high52w&&data.preco?f2((data.preco-data.high52w)/data.high52w*100,1,"%"):"—"} desc="Drawdown da máxima de 52 semanas" cor={data.preco<data.high52w*0.8?C.red:data.preco<data.high52w*0.95?C.gold:C.accent}/>
+                <MRow label="Máx. 52 Semanas" val={curr+f2(data.high52w,2)} desc="Preço máximo nos últimos 52 semanas"/>
+                <MRow label="Mín. 52 Semanas" val={curr+f2(data.low52w,2)} desc="Preço mínimo nos últimos 52 semanas"/>
+                <MRow label="ATR (14)" val={data.atr?curr+data.atr:"—"} desc="Average True Range — volatilidade diária média"/>
               </div>
               <div style={S.card}>
-                <div style={{fontSize:12,fontWeight:700,color:C.gold,marginBottom:12}}>🏦 Balanço & Saúde Financeira</div>
-                {[
-                  {label:"Mkt Cap",val:fmtM(data.mktcap),desc:"Capitalização de mercado total."},
-                  {label:"EBITDA",val:fmtM(data.ebitda),desc:"Lucro antes de juros, impostos, depr. e amort."},
-                  {label:"Dívida Líquida",val:fmtM(data.dividaLiquida),desc:"Dívida total menos caixa disponível."},
-                  {label:"Caixa",val:fmtM(data.caixa),desc:"Posição de caixa e equivalentes."},
-                  {label:"Current Ratio",val:fmt2(data.currentRatio,2,"x"),desc:"Liquidez corrente — ativo circ./passivo circ."},
-                  {label:"Dívida/PL",val:fmt2(data.debtEquity,2,"x"),desc:"Alavancagem financeira total."},
-                ].map(m=>(
-                  <div key={m.label} style={{padding:"8px 0",borderBottom:"1px solid "+C.border+"44"}}>
-                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
-                      <span style={{fontSize:12,color:C.textSub}}>{m.label}</span>
-                      <span style={{fontSize:13,fontWeight:700,color:C.text}}>{m.val}</span>
-                    </div>
-                    <div style={{fontSize:10,color:C.muted}}>{m.desc}</div>
-                  </div>
-                ))}
+                <div style={{fontSize:12,fontWeight:700,color:C.gold,marginBottom:10}}>🏦 Risco Financeiro</div>
+                <MRow label="Altman Z-Score" val={f2(data.zScore,2)} bom=">2.99" ruim="<1.81" desc="Risco de falência. >2.99 = seguro. <1.81 = zona de perigo." cor={data.zScore>2.99?C.accent:data.zScore>1.81?C.gold:C.red}/>
+                <MRow label="F-Score (Piotroski)" val={data.fScore+"/9"} bom=">7" ruim="<3" desc="Qualidade do balanço (0-9)" cor={data.fScore>=7?C.accent:data.fScore>=5?C.gold:C.red}/>
+                <MRow label="Dívida Líq./EBITDA" val={f2(data.netDebtEbitda,2,"x")} bom="<2x" ruim=">4x" desc="Anos de EBITDA para pagar a dívida"/>
+                <MRow label="Cobertura de Juros" val={f2(data.interestCoverage,1,"x")} bom=">5x" ruim="<2x" desc="EBITDA estimado / Juros anuais"/>
+                <MRow label="Current Ratio" val={f2(data.currentRatio,2,"x")} bom=">1.5x" ruim="<1x" desc="Liquidez corrente"/>
+                <MRow label="Dívida/PL" val={f2(data.debtEquity,2,"x")} bom="<0.5x" ruim=">2x" desc="Alavancagem financeira"/>
               </div>
             </div>
           )}
 
-          {/* ── DIVIDENDOS ── */}
-          {aba==="dividendos" && (
-            <div style={{display:"flex",flexDirection:"column",gap:12}}>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12}}>
+          {/* ══ DIVIDENDOS ══ */}
+          {aba==="dividendos"&&(
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10}}>
                 {[
-                  {label:"Dividend Yield",val:fmt2(data.dy,2,"%"),cor:data.dy>4?C.accent:data.dy>2?C.gold:C.red,desc:"Yield sobre preço atual"},
-                  {label:"Dividendo/Ação",val:data.divRate!=null?(data.moeda==="BRL"?"R$":"$")+fmt2(data.divRate,2):"—",cor:C.text,desc:"Dividendo anual por ação"},
-                  {label:"Frequência",val:data.divFreq||"—",cor:C.text,desc:"Frequência de pagamento"},
-                  {label:"Payout Ratio",val:data.dy&&data.pe?fmt2(data.dy*data.pe,0,"%"):"—",cor:C.text,desc:"% do lucro distribuído"},
+                  {l:"Dividend Yield",v:f2(data.dy,2,"%"),c:data.dy>5?C.accent:data.dy>2?C.gold:C.muted},
+                  {l:"Dividendo/Ação",v:data.divRate?curr+f2(data.divRate,2):"—",c:C.text},
+                  {l:"Payout Ratio",v:data.dy&&data.pe?f2(data.dy/100*data.pe*100,0,"%"):"—",c:C.text},
+                  {l:"Data Ex-Div",v:data.exDivDate||"—",c:C.text},
                 ].map(k=>(
-                  <div key={k.label} style={{...S.card,textAlign:"center",padding:"16px"}}>
-                    <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:.5}}>{k.label}</div>
-                    <div style={{fontSize:24,fontWeight:800,color:k.cor,fontFamily:"'Syne',sans-serif",margin:"8px 0"}}>{k.val}</div>
-                    <div style={{fontSize:11,color:C.muted}}>{k.desc}</div>
+                  <div key={k.l} style={{...S.card,textAlign:"center",padding:16}}>
+                    <div style={{fontSize:9,color:C.muted,textTransform:"uppercase",letterSpacing:.5}}>{k.l}</div>
+                    <div style={{fontSize:22,fontWeight:800,color:k.c,fontFamily:"'Syne',sans-serif",margin:"8px 0"}}>{k.v}</div>
                   </div>
                 ))}
               </div>
               <div style={{...S.card,background:C.accentSoft,border:"1px solid "+C.accent+"44"}}>
-                <div style={{fontSize:13,color:C.accent,fontWeight:700,marginBottom:6}}>💡 Análise de Dividendos</div>
-                <div style={{fontSize:12,color:C.textSub,lineHeight:1.8}}>
-                  {data.dy>5?"Yield alto acima de 5% — atrativo para renda passiva. Verifique se é sustentável (payout ratio e crescimento do lucro)."
-                   :data.dy>2?"Yield moderado entre 2-5% — equilibrado entre crescimento e renda."
-                   :data.dy>0?"Yield baixo abaixo de 2% — empresa com foco em crescimento e reinvestimento."
-                   :"Empresa não paga dividendos no momento — pode estar em fase de crescimento ou com prejuízo."}
-                  {data.betaFund&&" Beta de "+fmt2(data.betaFund,2)+" indica "+(data.betaFund<0.8?"baixo risco — ativo defensivo adequado para carteiras de renda.":data.betaFund>1.3?"maior volatilidade — menos indicado para carteiras conservadoras de renda.":"volatilidade próxima ao mercado.")}
+                <div style={{fontSize:13,color:C.accent,fontWeight:700,marginBottom:8}}>💡 Análise de Dividendos</div>
+                <div style={{fontSize:12,color:C.textSub,lineHeight:1.9}}>
+                  {data.dy>5?"✅ Yield alto (>5%) — atrativo para renda passiva. Verifique sustentabilidade pelo payout ratio e crescimento do lucro."
+                  :data.dy>2?"⚖ Yield moderado (2-5%) — equilíbrio entre crescimento e renda."
+                  :data.dy>0?"📈 Yield baixo (<2%) — empresa com foco em crescimento e reinvestimento."
+                  :"⚠ Sem dividendos — fase de crescimento ou resultados negativos."}
+                  {data.betaFund&&(" Beta "+f2(data.betaFund,2)+" indica "+(data.betaFund<0.8?"ativo defensivo — adequado para carteiras de renda.":data.betaFund>1.3?"maior volatilidade — menos indicado para carteiras conservadoras.":"volatilidade próxima ao mercado."))}
                 </div>
               </div>
             </div>
           )}
 
-          {/* ── COMPARAÇÃO ── */}
-          {aba==="comparacao" && (
-            <div style={S.card}>
-              <SecaoTitulo titulo={"Comparação — "+data.ticker+" vs Portfólio"} sub="Como este ativo se compara ao seu portfólio atual"/>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginTop:8}}>
+          {/* ══ SCORES ══ */}
+          {aba==="scores"&&(
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12}}>
                 {[
-                  {label:"Dividend Yield",ativo:fmt2(data.dy,2,"%"),port:fmt2(CFG.rfRate/3,2,"%")},
-                  {label:"Beta",ativo:fmt2(data.betaFund,2),port:fmt2(CFG.portBeta,2)},
-                  {label:"P/L",ativo:fmt2(data.pe,1,"x"),port:"—"},
-                  {label:"ROE",ativo:fmt2(data.roe!=null?data.roe*100:null,1,"%"),port:"—"},
+                  {l:"Score de Qualidade",v:data.qualityScore,c:data.qualityScore>=70?C.accent:data.qualityScore>=50?C.gold:C.red,
+                   d:"ROE, margens, dívida, crescimento, dividendos"},
+                  {l:"Score de Momentum",v:data.momentumScore,c:data.momentumScore>=70?C.accent:data.momentumScore>=50?C.gold:C.red,
+                   d:"Retornos 1M/3M/6M, RSI, posição vs SMA"},
+                  {l:"Score de Valor",v:data.valueScore,c:data.valueScore>=70?C.accent:data.valueScore>=50?C.gold:C.red,
+                   d:"P/L, P/VP, DY, PEG Ratio"},
+                  {l:"Score Composto",v:data.compositeScore,c:data.compositeScore>=70?C.accent:data.compositeScore>=50?C.gold:C.red,
+                   d:"40% Qualidade + 30% Momentum + 30% Valor"},
                 ].map(k=>(
-                  <div key={k.label} style={{background:C.surface,borderRadius:10,padding:"12px 14px"}}>
-                    <div style={{fontSize:11,color:C.muted,marginBottom:8}}>{k.label}</div>
-                    <div style={{display:"flex",justifyContent:"space-between"}}>
-                      <div style={{textAlign:"center"}}>
-                        <div style={{fontSize:10,color:C.accent,marginBottom:2}}>{data.ticker}</div>
-                        <div style={{fontSize:18,fontWeight:800,color:C.text}}>{k.ativo}</div>
-                      </div>
-                      <div style={{fontSize:20,color:C.border,alignSelf:"center"}}>vs</div>
-                      <div style={{textAlign:"center"}}>
-                        <div style={{fontSize:10,color:C.muted,marginBottom:2}}>Portfólio</div>
-                        <div style={{fontSize:18,fontWeight:800,color:C.muted}}>{k.port}</div>
-                      </div>
+                  <div key={k.l} style={{...S.cardGlow(k.c),padding:18,textAlign:"center"}}>
+                    <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>{k.l}</div>
+                    <div style={{fontSize:44,fontWeight:800,fontFamily:"'Syne',sans-serif",color:k.c,lineHeight:1}}>{k.v}</div>
+                    <div style={{background:C.border,borderRadius:4,height:6,margin:"10px 0 6px"}}>
+                      <div style={{width:k.v+"%",height:"100%",background:k.c,borderRadius:4,transition:"width .5s"}}/>
                     </div>
+                    <div style={{fontSize:10,color:C.muted}}>{k.d}</div>
                   </div>
                 ))}
+              </div>
+              <div style={{...S.cardGlow(data.compositeScore>=70?C.accent:data.compositeScore>=50?C.gold:C.red),padding:20,textAlign:"center"}}>
+                <div style={{fontSize:11,color:C.muted,marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>Recomendação Algorítmica</div>
+                <div style={{fontSize:28,fontWeight:800,color:data.compositeScore>=70?C.accent:data.compositeScore>=50?C.gold:C.red}}>{data.recommendation}</div>
+                <div style={{fontSize:12,color:C.textSub,marginTop:8,lineHeight:1.7}}>
+                  {data.compositeScore>=70?"Score composto acima de 70 — fundamentals sólidos, momentum positivo e valuation razoável. Perfil favorável para análise mais profunda."
+                  :data.compositeScore>=50?"Score composto entre 50-70 — ativo com características mistas. Análise mais detalhada recomendada antes de qualquer decisão."
+                  :"Score composto abaixo de 50 — fundamentals fracos ou deterioração de métricas. Alta cautela recomendada."}
+                </div>
+                <div style={{fontSize:10,color:C.muted,marginTop:8}}>⚠ Esta análise é informativa e não constitui recomendação de investimento.</div>
               </div>
             </div>
           )}
         </>
-      )}
-
-      {!data && !loading && !erro && (
-        <div style={{...S.card,textAlign:"center",padding:48}}>
-          <div style={{fontSize:40,marginBottom:12}}>🔍</div>
-          <div style={{fontSize:16,fontWeight:700,color:C.text,marginBottom:8}}>Pesquise qualquer ativo</div>
-          <div style={{fontSize:13,color:C.muted,lineHeight:1.8}}>
-            Digite um ticker acima e clique em Buscar.<br/>
-            Ex: <b style={{color:C.accent}}>PETR4</b> · <b style={{color:C.accent}}>AAPL</b> · <b style={{color:C.accent}}>BTC-USD</b> · <b style={{color:C.accent}}>SPY</b> · <b style={{color:C.accent}}>HGLG11</b>
-          </div>
-        </div>
       )}
     </div>
   );
